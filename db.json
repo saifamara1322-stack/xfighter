@@ -1,0 +1,481 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "mohamed.fighter@example.com",
+      "password": "$2b$10$hashedpassword123",
+      "firstName": "Mohamed",
+      "lastName": "Ben Ali",
+      "role": "fighter",
+      "status": "active",
+      "verified": true,
+      "createdAt": "2024-01-15T10:00:00Z",
+      "updatedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "email": "nour.coach@example.com",
+      "password": "$2b$10$hashedpassword456",
+      "firstName": "Nour",
+      "lastName": "Khamessi",
+      "role": "coach",
+      "status": "active",
+      "verified": true,
+      "createdAt": "2024-01-16T11:30:00Z",
+      "updatedAt": "2024-01-16T11:30:00Z"
+    },
+    {
+      "id": "3",
+      "email": "youssef.organizer@example.com",
+      "password": "$2b$10$hashedpassword789",
+      "firstName": "Youssef",
+      "lastName": "Mansouri",
+      "role": "organizer",
+      "status": "active",
+      "verified": true,
+      "createdAt": "2024-01-17T09:15:00Z",
+      "updatedAt": "2024-01-17T09:15:00Z"
+    },
+    {
+      "id": "4",
+      "email": "sirine.ref@example.com",
+      "password": "$2b$10$hashedpasswordabc",
+      "firstName": "Sirine",
+      "lastName": "Trabelsi",
+      "role": "referee",
+      "status": "active",
+      "verified": true,
+      "createdAt": "2024-01-18T14:20:00Z",
+      "updatedAt": "2024-01-18T14:20:00Z"
+    },
+    {
+      "id": "5",
+      "email": "admin@example.com",
+      "password": "$2b$10$adminhashedpassword",
+      "firstName": "Karim",
+      "lastName": "Haddad",
+      "role": "admin",
+      "status": "active",
+      "verified": true,
+      "createdAt": "2024-01-14T08:00:00Z",
+      "updatedAt": "2024-01-14T08:00:00Z"
+    },
+    {
+      "id": "6",
+      "email": "ahmed.pending@example.com",
+      "password": "$2b$10$pendinghash123",
+      "firstName": "Ahmed",
+      "lastName": "Bouazizi",
+      "role": "fighter",
+      "status": "pending",
+      "verified": false,
+      "createdAt": "2024-01-19T16:45:00Z",
+      "updatedAt": "2024-01-19T16:45:00Z"
+    },
+    {
+      "id": "7",
+      "email": "suspended.user@example.com",
+      "password": "$2b$10$suspendedhash456",
+      "firstName": "Imen",
+      "lastName": "Gharbi",
+      "role": "fighter",
+      "status": "suspended",
+      "verified": true,
+      "createdAt": "2024-01-10T13:20:00Z",
+      "updatedAt": "2024-01-18T09:30:00Z"
+    },
+    {
+      "email": "test@example.com",
+      "password": "testtest",
+      "firstName": "test",
+      "lastName": "test",
+      "role": "fighter",
+      "phoneNumber": "123445678",
+      "id": "ClABziqkAS4",
+      "status": "pending",
+      "verified": false,
+      "createdAt": "2026-04-11T01:18:26.273340",
+      "updatedAt": "2026-04-11T01:18:26.290918"
+    }
+  ],
+  "verificationRequests": [
+    {
+      "id": "1",
+      "userId": "6",
+      "status": "pending",
+      "documents": [
+        {
+          "type": "id_card",
+          "url": "/uploads/id_card_ahmed_bouazizi.pdf"
+        },
+        {
+          "type": "fighter_license",
+          "url": "/uploads/license_ahmed_bouazizi.pdf"
+        }
+      ],
+      "submittedAt": "2024-01-19T16:45:00Z",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "comments": ""
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "1",
+      "action": "user_registered",
+      "userId": "6",
+      "details": {
+        "email": "ahmed.pending@example.com",
+        "role": "fighter",
+        "fullName": "Ahmed Bouazizi"
+      },
+      "timestamp": "2024-01-19T16:45:00Z"
+    },
+    {
+      "id": "2",
+      "action": "role_assigned",
+      "adminId": "5",
+      "targetUserId": "6",
+      "details": {
+        "oldRole": null,
+        "newRole": "fighter",
+        "adminName": "Karim Haddad"
+      },
+      "timestamp": "2024-01-19T16:46:00Z"
+    },
+    {
+      "id": "3",
+      "action": "user_suspended",
+      "adminId": "5",
+      "targetUserId": "7",
+      "details": {
+        "reason": "Violation des conditions d'utilisation",
+        "adminName": "Karim Haddad",
+        "targetName": "Imen Gharbi"
+      },
+      "timestamp": "2024-01-18T09:30:00Z"
+    },
+    {
+      "id": "4",
+      "action": "user_verified",
+      "adminId": "5",
+      "targetUserId": "1",
+      "details": {
+        "verificationMethod": "id_document",
+        "adminName": "Karim Haddad",
+        "targetName": "Mohamed Ben Ali"
+      },
+      "timestamp": "2024-01-15T14:00:00Z"
+    },
+    {
+      "id": "5",
+      "action": "profile_updated",
+      "userId": "2",
+      "details": {
+        "field": "specialization",
+        "oldValue": null,
+        "newValue": "MMA & Kickboxing",
+        "userName": "Nour Khamessi"
+      },
+      "timestamp": "2024-01-16T15:20:00Z"
+    },
+    {
+      "id": "6",
+      "action": "event_created",
+      "organizerId": "3",
+      "details": {
+        "eventName": "UFW Tunisia Championship",
+        "eventDate": "2024-02-15",
+        "organizerName": "Youssef Mansouri"
+      },
+      "timestamp": "2024-01-17T10:30:00Z"
+    }
+  ],
+  "fighters": [
+    {
+      "id": "1",
+      "userId": "1",
+      "weight": 77,
+      "weightClass": "Welterweight",
+      "height": 180,
+      "reach": 185,
+      "record": {
+        "wins": 8,
+        "losses": 2,
+        "draws": 0,
+        "knockouts": 4,
+        "submissions": 2,
+        "decisions": 2
+      },
+      "style": "Muay Thai & BJJ",
+      "gym": "Tunis Fight Club",
+      "coachId": "2",
+      "verified": true,
+      "createdAt": "2024-01-15T10:00:00Z",
+      "updatedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "userId": "6",
+      "weight": 70,
+      "weightClass": "Lightweight",
+      "height": 175,
+      "reach": 180,
+      "record": {
+        "wins": 0,
+        "losses": 0,
+        "draws": 0,
+        "knockouts": 0,
+        "submissions": 0,
+        "decisions": 0
+      },
+      "style": "Boxing",
+      "gym": "Sousse Fighting Academy",
+      "coachId": null,
+      "verified": false,
+      "createdAt": "2024-01-19T16:45:00Z",
+      "updatedAt": "2024-01-19T16:45:00Z"
+    },
+    {
+      "id": "3",
+      "userId": "7",
+      "weight": 84,
+      "weightClass": "Middleweight",
+      "height": 183,
+      "reach": 188,
+      "record": {
+        "wins": 3,
+        "losses": 4,
+        "draws": 0,
+        "knockouts": 1,
+        "submissions": 1,
+        "decisions": 1
+      },
+      "style": "Wrestling",
+      "gym": "El Menzah Fight Team",
+      "coachId": "2",
+      "verified": true,
+      "createdAt": "2024-01-10T13:20:00Z",
+      "updatedAt": "2024-01-18T09:30:00Z"
+    }
+  ],
+  "coaches": [
+    {
+      "id": "1",
+      "userId": "2",
+      "certifications": [
+        "MMA Level 3",
+        "BJJ Black Belt",
+        "Boxing Coach"
+      ],
+      "specialization": "MMA & BJJ",
+      "experience": 12,
+      "gym": "Tunis Fight Club",
+      "verified": true,
+      "status": "active",
+      "fighters": [
+        "1"
+      ],
+      "bio": "Ancien champion national avec 12 ans d'expérience en MMA et BJJ",
+      "createdAt": "2024-01-16T11:30:00Z",
+      "updatedAt": "2024-01-16T11:30:00Z",
+      "verifiedAt": "2024-01-16T12:00:00Z"
+    }
+  ],
+  "gyms": [
+    {
+      "id": "1",
+      "name": "Tunis Fight Club",
+      "address": "Avenue Habib Bourguiba, Tunis",
+      "city": "Tunis",
+      "phone": "+216 71 123 456",
+      "email": "contact@tunisfightclub.com",
+      "ownerId": "2",
+      "status": "active",
+      "verified": true,
+      "fighters": [
+        "1"
+      ],
+      "description": "Le premier club de MMA en Tunisie",
+      "createdAt": "2024-01-15T10:00:00Z",
+      "updatedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "name": "Sousse Fighting Academy",
+      "address": "Boulevard du 14 Janvier, Sousse",
+      "city": "Sousse",
+      "phone": "+216 73 123 456",
+      "email": "info@soussefighting.com",
+      "ownerId": null,
+      "status": "pending",
+      "verified": false,
+      "fighters": [
+        "2"
+      ],
+      "description": "Académie de sports de combat à Sousse",
+      "createdAt": "2024-01-19T16:45:00Z",
+      "updatedAt": "2024-01-19T16:45:00Z"
+    },
+    {
+      "id": "3",
+      "name": "El Menzah Fight Team",
+      "address": "Rue de la Liberté, El Menzah, Tunis",
+      "city": "Tunis",
+      "phone": "+216 71 987 654",
+      "email": "contact@elmenzahfight.com",
+      "ownerId": "2",
+      "status": "active",
+      "verified": true,
+      "fighters": [
+        "3"
+      ],
+      "description": "Équipe de combat d'El Menzah",
+      "createdAt": "2024-01-10T13:20:00Z",
+      "updatedAt": "2024-01-18T09:30:00Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "1",
+      "name": "UFW Tunisia Championship 2024",
+      "description": "Premier championnat de MMA en Tunisie",
+      "organizerId": "3",
+      "date": "2024-03-15T19:00:00Z",
+      "location": "Salle Omnisport de Radès, Tunis",
+      "city": "Tunis",
+      "status": "upcoming",
+      "disciplines": [
+        "MMA",
+        "Kickboxing"
+      ],
+      "weightClasses": [
+        "Welterweight",
+        "Lightweight",
+        "Middleweight"
+      ],
+      "fightCard": [],
+      "ticketPrice": 50,
+      "maxFighters": 20,
+      "createdAt": "2024-01-17T09:15:00Z",
+      "updatedAt": "2024-01-17T09:15:00Z"
+    },
+    {
+      "id": "2",
+      "name": "Fight Night: Rising Stars",
+      "description": "Soirée de combats pour les jeunes talents tunisiens",
+      "organizerId": "3",
+      "date": "2024-04-20T18:00:00Z",
+      "location": "Salle Couverte, Sousse",
+      "city": "Sousse",
+      "status": "upcoming",
+      "disciplines": [
+        "MMA"
+      ],
+      "weightClasses": [
+        "Featherweight",
+        "Lightweight",
+        "Welterweight"
+      ],
+      "fightCard": [],
+      "ticketPrice": 30,
+      "maxFighters": 12,
+      "createdAt": "2024-01-20T10:00:00Z",
+      "updatedAt": "2024-01-20T10:00:00Z"
+    }
+  ],
+  "eventRegistrations": [
+    {
+      "id": "1",
+      "eventId": "1",
+      "fighterId": "1",
+      "status": "approved",
+      "weightClass": "Welterweight",
+      "registeredAt": "2024-01-20T09:00:00Z",
+      "approvedBy": "3",
+      "approvedAt": "2024-01-21T10:30:00Z"
+    },
+    {
+      "id": "2",
+      "eventId": "1",
+      "fighterId": "3",
+      "status": "pending",
+      "weightClass": "Middleweight",
+      "registeredAt": "2024-01-22T14:00:00Z",
+      "approvedBy": null,
+      "approvedAt": null
+    }
+  ],
+  "fightResults": [
+    {
+      "id": "1",
+      "eventId": "2",
+      "fightId": "1",
+      "winnerId": "1",
+      "loserId": "3",
+      "method": "KO/TKO",
+      "round": 2,
+      "time": "02:35",
+      "status": "official",
+      "refereeId": "4",
+      "submittedBy": "4",
+      "submittedAt": "2024-01-25T21:30:00Z",
+      "verifiedBy": "5",
+      "verifiedAt": "2024-01-26T10:00:00Z"
+    }
+  ],
+  "rankings": [
+    {
+      "id": "1",
+      "weightClass": "Welterweight",
+      "discipline": "MMA",
+      "rankings": [
+        {
+          "position": 1,
+          "fighterId": "1",
+          "points": 1250,
+          "previousPosition": 2,
+          "change": "+1"
+        },
+        {
+          "position": 2,
+          "fighterId": "3",
+          "points": 980,
+          "previousPosition": 1,
+          "change": "-1"
+        }
+      ],
+      "updatedAt": "2024-02-01T00:00:00Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "1",
+      "userId": "1",
+      "title": "Fight Confirmed",
+      "message": "Your fight at UFW Tunisia Championship has been confirmed!",
+      "type": "fight_confirmation",
+      "read": false,
+      "createdAt": "2024-01-21T10:35:00Z"
+    },
+    {
+      "id": "2",
+      "userId": "3",
+      "title": "Registration Pending",
+      "message": "Your registration for UFW Tunisia Championship is pending review",
+      "type": "registration_status",
+      "read": true,
+      "createdAt": "2024-01-22T14:05:00Z"
+    },
+    {
+      "id": "3",
+      "userId": "2",
+      "title": "Fighter Added to Roster",
+      "message": "Mohamed Ben Ali has been added to your roster",
+      "type": "roster_update",
+      "read": false,
+      "createdAt": "2024-01-15T14:30:00Z"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
