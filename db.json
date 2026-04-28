@@ -257,6 +257,52 @@
       "verified": true,
       "createdAt": "2024-01-10T13:20:00Z",
       "updatedAt": "2024-01-18T09:30:00Z"
+    },
+    {
+      "userId": "1",
+      "weight": 77,
+      "weightClass": "Welterweight",
+      "height": 180,
+      "reach": 50,
+      "style": "Muay",
+      "gym": "twins",
+      "bio": null,
+      "nationality": null,
+      "birthDate": null,
+      "coachId": null,
+      "id": "tCJx0GcatzQ",
+      "record": {
+        "wins": 0,
+        "losses": 0,
+        "draws": 0,
+        "knockouts": 0,
+        "submissions": 0,
+        "decisions": 0
+      },
+      "verified": false
+    },
+    {
+      "userId": "1",
+      "weight": 70,
+      "weightClass": "Middleweight",
+      "height": 180,
+      "reach": 50,
+      "style": "Box",
+      "gym": "TWINS",
+      "bio": null,
+      "nationality": null,
+      "birthDate": null,
+      "coachId": null,
+      "id": "oBzXHeXElaQ",
+      "record": {
+        "wins": 0,
+        "losses": 0,
+        "draws": 0,
+        "knockouts": 0,
+        "submissions": 0,
+        "decisions": 0
+      },
+      "verified": false
     }
   ],
   "coaches": [
@@ -280,6 +326,34 @@
       "createdAt": "2024-01-16T11:30:00Z",
       "updatedAt": "2024-01-16T11:30:00Z",
       "verifiedAt": "2024-01-16T12:00:00Z"
+    },
+    {
+      "userId": "2",
+      "specialization": "bjj",
+      "experience": 5,
+      "certifications": [],
+      "gym": null,
+      "bio": null,
+      "id": "mrjdwelMRaY",
+      "status": "pending",
+      "verified": false,
+      "fighters": [],
+      "createdAt": "2026-04-28T15:44:23.288973",
+      "updatedAt": "2026-04-28T15:44:23.327006"
+    },
+    {
+      "userId": "2",
+      "specialization": "bjj",
+      "experience": 5,
+      "certifications": [],
+      "gym": "gym",
+      "bio": null,
+      "id": "OxOsjSKmomY",
+      "status": "pending",
+      "verified": false,
+      "fighters": [],
+      "createdAt": "2026-04-28T15:46:58.777178",
+      "updatedAt": "2026-04-28T15:46:58.777401"
     }
   ],
   "gyms": [
