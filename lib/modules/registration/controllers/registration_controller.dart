@@ -10,19 +10,30 @@ class RegistrationController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
   final FighterController _fighterController = Get.find<FighterController>();
   
+  // Registration lists
   var fighterRegistrations = <EnhancedEventRegistration>[].obs;
+  var coachRegistrations = <EnhancedEventRegistration>[].obs;
   var pendingCoachRegistrations = <EnhancedEventRegistration>[].obs;
   var eventRegistrations = <EnhancedEventRegistration>[].obs;
+  
+  // UI states
   var isLoading = false.obs;
   var isCheckingEligibility = false.obs;
   var eligibilityResult = Rx<EligibilityCheck?>(null);
   
+  // Counters
   final pendingCount = 0.obs;
-  final approvedCount = 0.obs;
+  final coachApprovedCount = 0.obs;
+  final organizerApprovedCount = 0.obs;
+  final rejectedCount = 0.obs;
+  
+  // Error handling
   final hasError = false.obs;
   final errorMessage = ''.obs;
   
+  // Cache
   final Map<String, Event?> _eventCache = {};
+  final Map<String, FighterProfile?> _fighterCache = {};
 
   @override
   void onInit() {
@@ -30,7 +41,7 @@ class RegistrationController extends GetxController {
     loadUserRegistrations();
   }
   
-  // Load all registrations for the current user
+  // Load all registrations for the current user based on role
   Future<void> loadUserRegistrations() async {
     try {
       isLoading.value = true;
@@ -43,12 +54,19 @@ class RegistrationController extends GetxController {
       }
       
       // Load registrations based on user role
-      if (currentUser.role == UserRole.fighter) {
-        await loadFighterRegistrations();
-      } else if (currentUser.role == UserRole.coach) {
-        await loadCoachRegistrations();
-      } else if (currentUser.role == UserRole.organizer) {
-        await loadOrganizerRegistrations();
+      switch (currentUser.role) {
+        case UserRole.fighter:
+          await loadFighterRegistrations();
+          break;
+        case UserRole.coach:
+          await loadCoachRegistrations();
+          break;
+        case UserRole.organizer:
+        case UserRole.admin:
+          await loadOrganizerRegistrations();
+          break;
+        default:
+          break;
       }
       
       _updateCounts();
@@ -61,7 +79,7 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Load fighter registrations
+  // Load fighter registrations (for fighters)
   Future<void> loadFighterRegistrations() async {
     try {
       final currentUser = _authController.currentUser.value;
@@ -83,21 +101,25 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Load coach registrations
+  // Load coach registrations (for coaches - registrations they need to approve)
   Future<void> loadCoachRegistrations() async {
     try {
       final currentUser = _authController.currentUser.value;
       if (currentUser == null) return;
       
-      final registrations = await _registrationRepository.getCoachRegistrations(
+      final registrations = await _registrationRepository.getCoachPendingRegistrations(
         coachId: currentUser.id,
       );
       pendingCoachRegistrations.value = registrations;
+      coachRegistrations.value = registrations;
       
-      // Cache events
+      // Cache events and fighters
       for (var registration in registrations) {
         if (registration.event != null) {
           _eventCache[registration.eventId] = registration.event;
+        }
+        if (registration.fighterProfile != null) {
+          _fighterCache[registration.fighterId] = registration.fighterProfile;
         }
       }
     } catch (e) {
@@ -105,30 +127,38 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Load organizer registrations (all registrations for events they organize)
+  // Fetch coach registrations (alias for loadCoachRegistrations)
+  Future<void> fetchCoachRegistrations() async {
+    await loadCoachRegistrations();
+  }
+  
+  // Load organizer registrations (for organizers - registrations needing final approval)
   Future<void> loadOrganizerRegistrations() async {
     try {
       final currentUser = _authController.currentUser.value;
       if (currentUser == null) return;
       
-      final registrations = await _registrationRepository.getEventRegistrations(
+      final registrations = await _registrationRepository.getOrganizerPendingRegistrations(
         organizerId: currentUser.id,
       );
       eventRegistrations.value = registrations;
       
-      // Cache events
+      // Cache events and fighters
       for (var registration in registrations) {
         if (registration.event != null) {
           _eventCache[registration.eventId] = registration.event;
         }
+        if (registration.fighterProfile != null) {
+          _fighterCache[registration.fighterId] = registration.fighterProfile;
+        }
       }
     } catch (e) {
-      _showSnackbar('Error', 'Failed to load event registrations: ${e.toString()}', backgroundColor: Colors.red);
+      _showSnackbar('Error', 'Failed to load organizer registrations: ${e.toString()}', backgroundColor: Colors.red);
     }
   }
   
-  // Register for an event
-  Future<bool> registerForEvent(Event event, {String? teamName, List<String>? teamMembers}) async {
+  // Update registration status
+  Future<void> updateRegistrationStatus(String registrationId, String status) async {
     try {
       isLoading.value = true;
       
@@ -137,44 +167,224 @@ class RegistrationController extends GetxController {
         throw Exception('User not logged in');
       }
       
-      // Check eligibility before registering
-      final isEligible = await checkEligibility(event.id);
+      RegistrationStatus newStatus;
+      switch (status.toLowerCase()) {
+        case 'approved':
+          newStatus = RegistrationStatus.approvedByCoach;
+          break;
+        case 'rejected':
+          newStatus = RegistrationStatus.rejected;
+          break;
+        case 'cancelled':
+          newStatus = RegistrationStatus.cancelled;
+          break;
+        default:
+          throw Exception('Invalid status: $status');
+      }
+      
+      bool result;
+      if (newStatus == RegistrationStatus.approvedByCoach) {
+        result = await _registrationRepository.approveByCoach(
+          registrationId: registrationId,
+          coachId: currentUser.id,
+        );
+      } else if (newStatus == RegistrationStatus.rejected) {
+        result = await _registrationRepository.rejectRegistration(
+          registrationId: registrationId,
+          rejectedBy: currentUser.id,
+          reason: 'Rejected by coach',
+        );
+      } else {
+        result = await _registrationRepository.cancelRegistration(registrationId);
+      }
+      
+      if (result) {
+        await _updateLocalRegistrationStatus(registrationId, newStatus);
+        await loadCoachRegistrations();
+        _updateCounts();
+        
+        String message = status == 'approved' ? 'Registration approved successfully' :
+                        status == 'rejected' ? 'Registration rejected' :
+                        'Registration cancelled';
+        
+        _showSnackbar('Success', message, backgroundColor: Colors.green);
+      } else {
+        throw Exception('Failed to update registration status');
+      }
+    } catch (e) {
+      _showSnackbar('Error', 'Failed to update status: ${e.toString()}', backgroundColor: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  // Register fighter for an event
+  Future<bool> registerForEvent({
+    required String eventId,
+    required String weightClass,
+    String? notes,
+  }) async {
+    try {
+      isLoading.value = true;
+      
+      final currentUser = _authController.currentUser.value;
+      if (currentUser == null || currentUser.role != UserRole.fighter) {
+        throw Exception('Only fighters can register for events');
+      }
+      
+      // Check eligibility
+      final isEligible = await checkEligibility(eventId);
       if (!isEligible) {
-        _showSnackbar('Not Eligible', 'You are not eligible for this event', backgroundColor: Colors.orange);
         return false;
       }
       
+      // Get fighter's coach
+      final fighterProfile = _fighterController.fighterProfile.value;
+      final coachId = fighterProfile?.coachId;
+      
       final registration = EnhancedEventRegistration(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        eventId: event.id,
-        userId: currentUser.id,
-        user: currentUser,
-        event: event,
-        status: 'pending',
+        eventId: eventId,
+        fighterId: currentUser.id,
+        status: RegistrationStatus.pending,
+        weightClass: weightClass,
         registeredAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        teamName: teamName,
-        teamMembers: teamMembers,
+        coachId: coachId,
+        notes: notes,
       );
       
       final result = await _registrationRepository.registerForEvent(registration);
       
       if (result) {
-        // Refresh registrations based on role
-        if (currentUser.role == UserRole.fighter) {
-          await loadFighterRegistrations();
-        } else if (currentUser.role == UserRole.coach) {
-          await loadCoachRegistrations();
-        }
-        
+        await loadFighterRegistrations();
         _updateCounts();
-        _showSnackbar('Success', 'Successfully registered for event', backgroundColor: Colors.green);
+        _showSnackbar('Success', 'Registration submitted successfully', backgroundColor: Colors.green);
         return true;
       } else {
         throw Exception('Registration failed');
       }
     } catch (e) {
       _showSnackbar('Error', 'Failed to register: ${e.toString()}', backgroundColor: Colors.red);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  // Coach approves a fighter registration
+  Future<bool> approveByCoach(String registrationId, {String? notes}) async {
+    try {
+      isLoading.value = true;
+      
+      final currentUser = _authController.currentUser.value;
+      if (currentUser == null || currentUser.role != UserRole.coach) {
+        throw Exception('Only coaches can perform this action');
+      }
+      
+      final result = await _registrationRepository.approveByCoach(
+        registrationId: registrationId,
+        coachId: currentUser.id,
+        notes: notes,
+      );
+      
+      if (result) {
+        pendingCoachRegistrations.removeWhere((reg) => reg.id == registrationId);
+        coachRegistrations.removeWhere((reg) => reg.id == registrationId);
+        
+        _updateCounts();
+        _showSnackbar('Success', 'Registration approved', backgroundColor: Colors.green);
+        return true;
+      } else {
+        throw Exception('Approval failed');
+      }
+    } catch (e) {
+      _showSnackbar('Error', 'Failed to approve: ${e.toString()}', backgroundColor: Colors.red);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  // Organizer approves a fighter registration (final approval)
+  Future<bool> approveByOrganizer(String registrationId, {String? notes}) async {
+    try {
+      isLoading.value = true;
+      
+      final currentUser = _authController.currentUser.value;
+      if (currentUser == null || (currentUser.role != UserRole.organizer && currentUser.role != UserRole.admin)) {
+        throw Exception('Only organizers can perform this action');
+      }
+      
+      final result = await _registrationRepository.approveByOrganizer(
+        registrationId: registrationId,
+        organizerId: currentUser.id,
+        notes: notes,
+      );
+      
+      if (result) {
+        await _updateLocalRegistrationStatus(registrationId, RegistrationStatus.approvedByOrganizer);
+        
+        _updateCounts();
+        _showSnackbar('Success', 'Registration fully approved', backgroundColor: Colors.green);
+        return true;
+      } else {
+        throw Exception('Approval failed');
+      }
+    } catch (e) {
+      _showSnackbar('Error', 'Failed to approve: ${e.toString()}', backgroundColor: Colors.red);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  // Reject a registration
+  Future<bool> rejectRegistration(String registrationId, String reason) async {
+    try {
+      isLoading.value = true;
+      
+      final currentUser = _authController.currentUser.value;
+      final result = await _registrationRepository.rejectRegistration(
+        registrationId: registrationId,
+        rejectedBy: currentUser!.id,
+        reason: reason,
+      );
+      
+      if (result) {
+        await _updateLocalRegistrationStatus(registrationId, RegistrationStatus.rejected);
+        
+        _updateCounts();
+        _showSnackbar('Info', 'Registration rejected', backgroundColor: Colors.orange);
+        return true;
+      } else {
+        throw Exception('Rejection failed');
+      }
+    } catch (e) {
+      _showSnackbar('Error', 'Failed to reject: ${e.toString()}', backgroundColor: Colors.red);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  // Cancel registration (fighter self-cancel)
+  Future<bool> cancelRegistration(String registrationId) async {
+    try {
+      isLoading.value = true;
+      
+      final result = await _registrationRepository.cancelRegistration(registrationId);
+      
+      if (result) {
+        fighterRegistrations.removeWhere((reg) => reg.id == registrationId);
+        
+        _updateCounts();
+        _showSnackbar('Success', 'Registration cancelled', backgroundColor: Colors.green);
+        return true;
+      } else {
+        throw Exception('Cancellation failed');
+      }
+    } catch (e) {
+      _showSnackbar('Error', 'Failed to cancel: ${e.toString()}', backgroundColor: Colors.red);
       return false;
     } finally {
       isLoading.value = false;
@@ -217,108 +427,141 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Update registration status (for organizers/admins)
-  Future<void> updateRegistrationStatus(String registrationId, String newStatus) async {
-    try {
-      isLoading.value = true;
-      
-      await _registrationRepository.updateRegistrationStatus(registrationId, newStatus);
-      
-      // Update local lists
-      await _updateLocalRegistrationStatus(registrationId, newStatus);
-      
-      _updateCounts();
-      _showSnackbar('Success', 'Registration ${_getStatusMessage(newStatus)}', backgroundColor: Colors.green);
-    } catch (e) {
-      _showSnackbar('Error', 'Failed to update status: ${e.toString()}', backgroundColor: Colors.red);
-    } finally {
-      isLoading.value = false;
+  // Get status display text and color
+  Map<String, dynamic> getRegistrationStatusInfo(RegistrationStatus status) {
+    switch (status) {
+      case RegistrationStatus.pending:
+        return {
+          'text': 'Pending Coach Approval',
+          'color': Colors.orange,
+          'icon': Icons.pending_actions,
+        };
+      case RegistrationStatus.approvedByCoach:
+        return {
+          'text': 'Pending Organizer Approval',
+          'color': Colors.blue,
+          'icon': Icons.verified,
+        };
+      case RegistrationStatus.approvedByOrganizer:
+        return {
+          'text': 'Approved',
+          'color': Colors.green,
+          'icon': Icons.check_circle,
+        };
+      case RegistrationStatus.rejected:
+        return {
+          'text': 'Rejected',
+          'color': Colors.red,
+          'icon': Icons.cancel,
+        };
+      case RegistrationStatus.cancelled:
+        return {
+          'text': 'Cancelled',
+          'color': Colors.grey,
+          'icon': Icons.remove_circle,
+        };
     }
   }
   
-  // Cancel registration
-  Future<bool> cancelRegistration(String registrationId) async {
-    try {
-      isLoading.value = true;
-      
-      final result = await _registrationRepository.cancelRegistration(registrationId);
-      
-      if (result) {
-        // Remove from local lists
-        fighterRegistrations.removeWhere((reg) => reg.id == registrationId);
-        pendingCoachRegistrations.removeWhere((reg) => reg.id == registrationId);
-        eventRegistrations.removeWhere((reg) => reg.id == registrationId);
-        
-        _updateCounts();
-        _showSnackbar('Success', 'Registration cancelled successfully', backgroundColor: Colors.green);
-        return true;
-      } else {
-        throw Exception('Failed to cancel registration');
-      }
-    } catch (e) {
-      _showSnackbar('Error', 'Failed to cancel: ${e.toString()}', backgroundColor: Colors.red);
-      return false;
-    } finally {
-      isLoading.value = false;
+  // Update local registration status
+  Future<void> _updateLocalRegistrationStatus(String registrationId, RegistrationStatus newStatus) async {
+    // Update in fighterRegistrations
+    final fighterIndex = fighterRegistrations.indexWhere((r) => r.id == registrationId);
+    if (fighterIndex != -1) {
+      final updatedReg = EnhancedEventRegistration(
+        id: fighterRegistrations[fighterIndex].id,
+        eventId: fighterRegistrations[fighterIndex].eventId,
+        fighterId: fighterRegistrations[fighterIndex].fighterId,
+        status: newStatus,
+        weightClass: fighterRegistrations[fighterIndex].weightClass,
+        registeredAt: fighterRegistrations[fighterIndex].registeredAt,
+        coachId: fighterRegistrations[fighterIndex].coachId,
+        coachApprovedAt: newStatus == RegistrationStatus.approvedByCoach ? DateTime.now() : fighterRegistrations[fighterIndex].coachApprovedAt,
+        organizerId: fighterRegistrations[fighterIndex].organizerId,
+        organizerApprovedAt: newStatus == RegistrationStatus.approvedByOrganizer ? DateTime.now() : fighterRegistrations[fighterIndex].organizerApprovedAt,
+        rejectionReason: newStatus == RegistrationStatus.rejected ? fighterRegistrations[fighterIndex].rejectionReason : null,
+        notes: fighterRegistrations[fighterIndex].notes,
+      );
+      fighterRegistrations[fighterIndex] = updatedReg;
+      fighterRegistrations.refresh();
     }
-  }
-  
-  // Get registrations for a specific event (organizer view)
-  Future<List<EnhancedEventRegistration>> getEventRegistrations(String eventId) async {
-    try {
-      final registrations = await _registrationRepository.getEventRegistrationsByEventId(eventId);
-      return registrations;
-    } catch (e) {
-      _showSnackbar('Error', 'Failed to load event registrations: ${e.toString()}', backgroundColor: Colors.red);
-      return [];
+    
+    // Update in coachRegistrations
+    final coachIndex = coachRegistrations.indexWhere((r) => r.id == registrationId);
+    if (coachIndex != -1) {
+      final updatedReg = EnhancedEventRegistration(
+        id: coachRegistrations[coachIndex].id,
+        eventId: coachRegistrations[coachIndex].eventId,
+        fighterId: coachRegistrations[coachIndex].fighterId,
+        status: newStatus,
+        weightClass: coachRegistrations[coachIndex].weightClass,
+        registeredAt: coachRegistrations[coachIndex].registeredAt,
+        coachId: coachRegistrations[coachIndex].coachId,
+        coachApprovedAt: newStatus == RegistrationStatus.approvedByCoach ? DateTime.now() : coachRegistrations[coachIndex].coachApprovedAt,
+        organizerId: coachRegistrations[coachIndex].organizerId,
+        organizerApprovedAt: newStatus == RegistrationStatus.approvedByOrganizer ? DateTime.now() : coachRegistrations[coachIndex].organizerApprovedAt,
+        rejectionReason: newStatus == RegistrationStatus.rejected ? coachRegistrations[coachIndex].rejectionReason : null,
+        notes: coachRegistrations[coachIndex].notes,
+      );
+      coachRegistrations[coachIndex] = updatedReg;
+      coachRegistrations.refresh();
+    }
+    
+    // Update in eventRegistrations (organizer view)
+    final eventIndex = eventRegistrations.indexWhere((r) => r.id == registrationId);
+    if (eventIndex != -1) {
+      final updatedReg = EnhancedEventRegistration(
+        id: eventRegistrations[eventIndex].id,
+        eventId: eventRegistrations[eventIndex].eventId,
+        fighterId: eventRegistrations[eventIndex].fighterId,
+        status: newStatus,
+        weightClass: eventRegistrations[eventIndex].weightClass,
+        registeredAt: eventRegistrations[eventIndex].registeredAt,
+        coachId: eventRegistrations[eventIndex].coachId,
+        coachApprovedAt: eventRegistrations[eventIndex].coachApprovedAt,
+        organizerId: newStatus == RegistrationStatus.approvedByOrganizer ? _authController.currentUser.value?.id : eventRegistrations[eventIndex].organizerId,
+        organizerApprovedAt: newStatus == RegistrationStatus.approvedByOrganizer ? DateTime.now() : eventRegistrations[eventIndex].organizerApprovedAt,
+        rejectionReason: newStatus == RegistrationStatus.rejected ? eventRegistrations[eventIndex].rejectionReason : null,
+        notes: eventRegistrations[eventIndex].notes,
+      );
+      eventRegistrations[eventIndex] = updatedReg;
+      eventRegistrations.refresh();
     }
   }
   
   // Update counts for dashboard
   void _updateCounts() {
-    pendingCount.value = fighterRegistrations.where((r) => r.status == 'pending').length +
-                         pendingCoachRegistrations.where((r) => r.status == 'pending').length;
+    pendingCount.value = fighterRegistrations.where((r) => r.status == RegistrationStatus.pending).length +
+                         pendingCoachRegistrations.where((r) => r.status == RegistrationStatus.pending).length;
     
-    approvedCount.value = fighterRegistrations.where((r) => r.status == 'approved').length +
-                          pendingCoachRegistrations.where((r) => r.status == 'approved').length;
+    coachApprovedCount.value = fighterRegistrations.where((r) => r.status == RegistrationStatus.approvedByCoach).length +
+                               pendingCoachRegistrations.where((r) => r.status == RegistrationStatus.approvedByCoach).length;
+    
+    organizerApprovedCount.value = fighterRegistrations.where((r) => r.status == RegistrationStatus.approvedByOrganizer).length +
+                                   pendingCoachRegistrations.where((r) => r.status == RegistrationStatus.approvedByOrganizer).length;
+    
+    rejectedCount.value = fighterRegistrations.where((r) => r.status == RegistrationStatus.rejected).length +
+                          pendingCoachRegistrations.where((r) => r.status == RegistrationStatus.rejected).length;
   }
   
-  // Update local registration status
-  Future<void> _updateLocalRegistrationStatus(String registrationId, String newStatus) async {
-    // Update in fighterRegistrations
-    final fighterIndex = fighterRegistrations.indexWhere((r) => r.id == registrationId);
-    if (fighterIndex != -1) {
-      fighterRegistrations[fighterIndex].status = newStatus;
-      fighterRegistrations.refresh();
-    }
-    
-    // Update in pendingCoachRegistrations
-    final coachIndex = pendingCoachRegistrations.indexWhere((r) => r.id == registrationId);
-    if (coachIndex != -1) {
-      pendingCoachRegistrations[coachIndex].status = newStatus;
-      pendingCoachRegistrations.refresh();
-    }
-    
-    // Update in eventRegistrations
-    final eventIndex = eventRegistrations.indexWhere((r) => r.id == registrationId);
-    if (eventIndex != -1) {
-      eventRegistrations[eventIndex].status = newStatus;
-      eventRegistrations.refresh();
-    }
+  // Get registrations by status
+  List<EnhancedEventRegistration> getRegistrationsByStatus(RegistrationStatus status) {
+    return fighterRegistrations.where((r) => r.status == status).toList();
   }
   
-  // Get status message for snackbar
-  String _getStatusMessage(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return 'approved';
-      case 'rejected':
-        return 'rejected';
-      case 'cancelled':
-        return 'cancelled';
-      default:
-        return 'updated';
-    }
+  // Check if registration is pending approval
+  bool isRegistrationPending(EnhancedEventRegistration registration) {
+    return registration.status == RegistrationStatus.pending;
+  }
+  
+  // Check if registration needs organizer approval
+  bool needsOrganizerApproval(EnhancedEventRegistration registration) {
+    return registration.status == RegistrationStatus.approvedByCoach;
+  }
+  
+  // Check if registration is fully approved
+  bool isFullyApproved(EnhancedEventRegistration registration) {
+    return registration.status == RegistrationStatus.approvedByOrganizer;
   }
   
   // Clear error state
@@ -347,21 +590,6 @@ class RegistrationController extends GetxController {
       return event;
     } catch (e) {
       return null;
-    }
-  }
-  
-  // Export registrations to CSV (organizer only)
-  Future<String?> exportRegistrationsToCsv(String eventId) async {
-    try {
-      isLoading.value = true;
-      final csvUrl = await _registrationRepository.exportRegistrationsToCsv(eventId);
-      _showSnackbar('Success', 'Export completed', backgroundColor: Colors.green);
-      return csvUrl;
-    } catch (e) {
-      _showSnackbar('Error', 'Failed to export: ${e.toString()}', backgroundColor: Colors.red);
-      return null;
-    } finally {
-      isLoading.value = false;
     }
   }
   

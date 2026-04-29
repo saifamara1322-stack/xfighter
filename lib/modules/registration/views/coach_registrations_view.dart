@@ -69,7 +69,7 @@ class CoachRegistrationsView extends StatelessWidget {
 }
 
 class CoachRegistrationCard extends StatelessWidget {
-  final Registration registration;
+  final EnhancedEventRegistration registration;
   final RegistrationController controller;
   
   const CoachRegistrationCard({
@@ -80,16 +80,13 @@ class CoachRegistrationCard extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    // Check if this is a team registration (for coaches)
-    final bool isTeamRegistration = registration.teamId != null;
-    
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ExpansionTile(
         leading: CircleAvatar(
           backgroundColor: Colors.purple.withOpacity(0.1),
           child: Icon(
-            isTeamRegistration ? Icons.group : Icons.sports,
+            Icons.sports,
             color: Colors.purple,
           ),
         ),
@@ -100,10 +97,8 @@ class CoachRegistrationCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (registration.user != null && !isTeamRegistration)
-              Text('Coach: ${registration.user!.fullName}')
-            else if (isTeamRegistration && registration.teamName != null)
-              Text('Team: ${registration.teamName}'),
+            if (registration.fighterProfile != null)
+              Text('Fighter: ${registration.fighterProfile!.fullName}'),
             const SizedBox(height: 4),
             _buildStatusChip(registration.status),
           ],
@@ -127,38 +122,20 @@ class CoachRegistrationCard extends StatelessWidget {
                   const Divider(),
                 ],
                 
-                // Coach/Team Details
-                if (isTeamRegistration) ...[
+                // Fighter Details
+                if (registration.fighterProfile != null) ...[
                   const Text(
-                    'Team Details',
+                    'Fighter Details',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
-                  _buildInfoRow('Team Name:', registration.teamName ?? 'N/A'),
-                  if (registration.teamMembers != null && registration.teamMembers!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Team Members:',
-                      style: TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 4),
-                    ...registration.teamMembers!.map((member) => Padding(
-                      padding: const EdgeInsets.only(left: 16, bottom: 4),
-                      child: Text('• $member'),
-                    )),
-                  ],
-                ] else if (registration.user != null) ...[
-                  const Text(
-                    'Coach Details',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoRow('Name:', registration.user!.fullName),
-                  _buildInfoRow('Email:', registration.user!.email),
-                  _buildInfoRow('Role:', registration.user!.roleDisplayName),
+                  _buildInfoRow('Name:', registration.fighterProfile!.fullName),
+                  _buildInfoRow('Weight Class:', registration.weightClass),
+                  if (registration.fighterProfile!.record != null)
+                    _buildInfoRow('Record:', registration.fighterProfile!.record!),
                 ],
                 
-                if (!isTeamRegistration) const Divider(),
+                const Divider(),
                 
                 // Registration Details
                 const Text(
@@ -167,13 +144,15 @@ class CoachRegistrationCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _buildInfoRow('Registered:', _formatDate(registration.registeredAt)),
-                _buildInfoRow('Status:', registration.status.toUpperCase()),
+                _buildInfoRow('Status:', registration.status.toString().split('.').last),
+                if (registration.notes != null)
+                  _buildInfoRow('Notes:', registration.notes!),
                 
                 const SizedBox(height: 16),
                 // Action Buttons
                 Row(
                   children: [
-                    if (registration.status == 'pending')
+                    if (registration.status == RegistrationStatus.pending)
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => _showApprovalDialog(context, registration, 'approved'),
@@ -184,7 +163,7 @@ class CoachRegistrationCard extends StatelessWidget {
                           child: const Text('Approve'),
                         ),
                       ),
-                    if (registration.status == 'pending') ...[
+                    if (registration.status == RegistrationStatus.pending) ...[
                       const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton(
@@ -197,7 +176,7 @@ class CoachRegistrationCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (registration.status == 'approved')
+                    if (registration.status == RegistrationStatus.approvedByCoach)
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => _showApprovalDialog(context, registration, 'cancelled'),
@@ -217,26 +196,36 @@ class CoachRegistrationCard extends StatelessWidget {
     );
   }
   
-  Widget _buildStatusChip(String status) {
+  Widget _buildStatusChip(RegistrationStatus status) {
     Color color;
     IconData icon;
+    String text;
     
-    switch (status.toLowerCase()) {
-      case 'approved':
+    switch (status) {
+      case RegistrationStatus.approvedByOrganizer:
         color = Colors.green;
         icon = Icons.check_circle;
+        text = 'APPROVED';
         break;
-      case 'rejected':
+      case RegistrationStatus.approvedByCoach:
+        color = Colors.blue;
+        icon = Icons.verified;
+        text = 'PENDING ORGANIZER';
+        break;
+      case RegistrationStatus.rejected:
         color = Colors.red;
         icon = Icons.cancel;
+        text = 'REJECTED';
         break;
-      case 'cancelled':
+      case RegistrationStatus.cancelled:
         color = Colors.orange;
         icon = Icons.remove_circle;
+        text = 'CANCELLED';
         break;
       default:
         color = Colors.orange;
         icon = Icons.pending;
+        text = 'PENDING COACH';
     }
     
     return Container(
@@ -251,7 +240,7 @@ class CoachRegistrationCard extends StatelessWidget {
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 4),
           Text(
-            status.toUpperCase(),
+            text,
             style: TextStyle(
               color: color,
               fontSize: 12,
@@ -270,7 +259,7 @@ class CoachRegistrationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 80,
+            width: 100,
             child: Text(
               label,
               style: const TextStyle(
@@ -291,7 +280,7 @@ class CoachRegistrationCard extends StatelessWidget {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
   
-  void _showApprovalDialog(BuildContext context, Registration registration, String newStatus) {
+  void _showApprovalDialog(BuildContext context, EnhancedEventRegistration registration, String newStatus) {
     final String action = newStatus == 'approved' ? 'approve' : 
                          newStatus == 'rejected' ? 'reject' : 'cancel';
     final String message = newStatus == 'approved' 
