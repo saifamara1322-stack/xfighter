@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../data/repositories/api_client.dart';
 import '../controllers/registration_controller.dart';
-import '../../../data/models/event_model.dart';
+import '../../../data/models/enhanced_event_registration.dart';
 import '../../../data/models/user_model.dart';
 
 class CoachRegistrationsView extends StatelessWidget {
@@ -131,8 +130,6 @@ class CoachRegistrationCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   _buildInfoRow('Name:', registration.fighterProfile!.fullName),
                   _buildInfoRow('Weight Class:', registration.weightClass),
-                  if (registration.fighterProfile!.record != null)
-                    _buildInfoRow('Record:', registration.fighterProfile!.record!),
                 ],
                 
                 const Divider(),

@@ -2,53 +2,161 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xfighter/data/repositories/fighter_repository.dart';
 import 'package:xfighter/data/models/fighter_model.dart';
+import 'package:xfighter/data/models/coach_model.dart';
+import 'package:xfighter/data/models/club_model.dart';
 import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
 
 class FighterController extends GetxController {
   final FighterRepository _fighterRepository = FighterRepository();
   final AuthController _authController = Get.find<AuthController>();
-  
+
   var currentFighter = Rx<Fighter?>(null);
+  var currentCoach = Rx<Coach?>(null);
+  var currentClubs = <Club>[].obs;
   var isLoading = false.obs;
-  var isEditing = false.obs;
-  
-  // Form controllers for profile editing
-  final weightController = TextEditingController();
-  final heightController = TextEditingController();
-  final reachController = TextEditingController();
-  final styleController = TextEditingController();
-  final gymController = TextEditingController();
-  final bioController = TextEditingController();
-  final nationalityController = TextEditingController();
-  var selectedWeightClass = RxString('');
-  var birthDate = Rx<DateTime?>(null);
-  
+
+  // Pending request IDs (for cancel actions)
+  var pendingClubRequestId = RxString('');
+  var pendingCoachRequestId = RxString('');
+
   @override
   void onInit() {
     super.onInit();
-    loadFighterProfile();
+    final userId = _authController.currentUser.value?.id;
+    if (userId != null) loadFighterProfile(userId);
   }
-  
-  @override
-  void onClose() {
-    weightController.dispose();
-    heightController.dispose();
-    reachController.dispose();
-    styleController.dispose();
-    gymController.dispose();
-    bioController.dispose();
-    nationalityController.dispose();
-    super.onClose();
+
+  // ── Load ──────────────────────────────────────────────────────────────────
+
+  Future<void> loadFighterProfile(String fighterId) async {
+    isLoading.value = true;
+    try {
+      currentFighter.value =
+          await _fighterRepository.getFighterProfile(fighterId);
+      await Future.wait([
+        _loadCoach(fighterId),
+        _loadClubs(fighterId),
+      ]);
+    } catch (e) {
+      _snack('Erreur', 'Impossible de charger le profil: $e',
+          color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
   }
-  
-  void _showSnackbar(String title, String message, {Color backgroundColor = Colors.green}) {
+
+  Future<void> _loadCoach(String fighterId) async {
+    try {
+      currentCoach.value =
+          await _fighterRepository.getFighterCoach(fighterId);
+    } catch (_) {
+      currentCoach.value = null;
+    }
+  }
+
+  Future<void> _loadClubs(String fighterId) async {
+    try {
+      currentClubs.value =
+          await _fighterRepository.getFighterClubs(fighterId);
+    } catch (_) {
+      currentClubs.value = [];
+    }
+  }
+
+  // ── Club membership ────────────────────────────────────────────────────────
+
+  Future<void> requestJoinClub(String clubId) async {
+    isLoading.value = true;
+    try {
+      await _fighterRepository.requestJoinClub(clubId);
+      _snack('Succès', 'Demande d\'adhésion envoyée');
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> respondToClubInvitation(
+      String membershipId, String action) async {
+    isLoading.value = true;
+    try {
+      await _fighterRepository.respondToClubInvitation(membershipId, action);
+      _snack('Succès',
+          action == 'ACCEPT' ? 'Invitation acceptée' : 'Invitation refusée');
+      final userId = _authController.currentUser.value?.id;
+      if (userId != null) await loadFighterProfile(userId);
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> cancelClubRequest(String membershipId) async {
+    isLoading.value = true;
+    try {
+      await _fighterRepository.cancelClubRequest(membershipId);
+      _snack('Succès', 'Demande annulée');
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ── Coach relationship ─────────────────────────────────────────────────────
+
+  Future<void> requestCoach(String coachId) async {
+    isLoading.value = true;
+    try {
+      await _fighterRepository.requestCoach(coachId);
+      _snack('Succès', 'Demande envoyée au coach');
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> respondToCoachRequest(
+      String requestId, String action) async {
+    isLoading.value = true;
+    try {
+      await _fighterRepository.respondToCoachRequest(requestId, action);
+      _snack('Succès',
+          action == 'ACCEPT' ? 'Demande acceptée' : 'Demande refusée');
+      final userId = _authController.currentUser.value?.id;
+      if (userId != null) await loadFighterProfile(userId);
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> cancelCoachRequest(String requestId) async {
+    isLoading.value = true;
+    try {
+      await _fighterRepository.cancelCoachRequest(requestId);
+      _snack('Succès', 'Demande annulée');
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  void _snack(String title, String msg, {Color color = Colors.green}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (Get.context != null) {
         Get.snackbar(
           title,
-          message,
+          msg,
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: backgroundColor,
+          backgroundColor: color,
           colorText: Colors.white,
           duration: const Duration(seconds: 3),
           margin: const EdgeInsets.all(10),
@@ -56,108 +164,5 @@ class FighterController extends GetxController {
         );
       }
     });
-  }
-  
-  Future<void> loadFighterProfile() async {
-    final currentUser = _authController.currentUser.value;
-    if (currentUser == null) return;
-    
-    try {
-      isLoading.value = true;
-      final fighter = await _fighterRepository.getFighterByUserId(currentUser.id);
-      currentFighter.value = fighter;
-      
-      if (fighter != null) {
-        weightController.text = fighter.weight.toString();
-        heightController.text = fighter.height.toString();
-        reachController.text = fighter.reach.toString();
-        styleController.text = fighter.style;
-        gymController.text = fighter.gym;
-        bioController.text = fighter.bio ?? '';
-        nationalityController.text = fighter.nationality ?? '';
-        selectedWeightClass.value = fighter.weightClass;
-        birthDate.value = fighter.birthDate;
-      }
-    } catch (e) {
-      _showSnackbar('Erreur', 'Impossible de charger le profil: $e', backgroundColor: Colors.red);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-  
-  Future<void> updateFighterProfile() async {
-    if (currentFighter.value == null) return;
-    
-    try {
-      isLoading.value = true;
-      
-      final updatedData = {
-        'weight': int.tryParse(weightController.text) ?? currentFighter.value!.weight,
-        'height': int.tryParse(heightController.text) ?? currentFighter.value!.height,
-        'reach': int.tryParse(reachController.text) ?? currentFighter.value!.reach,
-        'style': styleController.text,
-        'gym': gymController.text,
-        'bio': bioController.text,
-        'nationality': nationalityController.text,
-        'weightClass': selectedWeightClass.value.isNotEmpty 
-            ? selectedWeightClass.value 
-            : currentFighter.value!.weightClass,
-        'birthDate': birthDate.value?.toIso8601String(),
-      };
-      
-      await _fighterRepository.updateFighter(currentFighter.value!.id, updatedData);
-      await loadFighterProfile();
-      
-      _showSnackbar('Succès', 'Profil mis à jour avec succès', backgroundColor: Colors.green);
-      isEditing.value = false;
-    } catch (e) {
-      _showSnackbar('Erreur', 'Échec de la mise à jour: $e', backgroundColor: Colors.red);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-  
-  Future<void> createFighterProfile() async {
-    final user = _authController.currentUser.value;
-    if (user == null) return;
-    
-    try {
-      isLoading.value = true;
-      
-      final fighterData = {
-        'userId': user.id,
-        'weight': int.tryParse(weightController.text) ?? 70,
-        'height': int.tryParse(heightController.text) ?? 175,
-        'reach': int.tryParse(reachController.text) ?? 175,
-        'style': styleController.text.isNotEmpty ? styleController.text : 'MMA',
-        'gym': gymController.text,
-        'bio': bioController.text,
-        'nationality': nationalityController.text,
-        'weightClass': selectedWeightClass.value.isNotEmpty ? selectedWeightClass.value : 'Lightweight',
-        'birthDate': birthDate.value?.toIso8601String(),
-        'verified': false,
-        'record': {
-          'wins': 0,
-          'losses': 0,
-          'draws': 0,
-          'knockouts': 0,
-          'submissions': 0,
-          'decisions': 0,
-        },
-      };
-      
-      await _fighterRepository.createFighter(fighterData);
-      await loadFighterProfile();
-      
-      _showSnackbar('Succès', 'Profil créé avec succès', backgroundColor: Colors.green);
-    } catch (e) {
-      _showSnackbar('Erreur', 'Échec de la création: $e', backgroundColor: Colors.red);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-  
-  void toggleEditing() {
-    isEditing.value = !isEditing.value;
   }
 }

@@ -8,7 +8,7 @@ class MatchmakingController extends GetxController {
   
   var fighters = <Fighter>[].obs;
   var fightCards = <FightCard>[].obs;
-  var suggestions = <MatchupSuggestion>[].obs;
+  var suggestions = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
   var selectedWeightClass = ''.obs;
   

@@ -1,7 +1,7 @@
 // enhanced_event_registration.dart
 import 'package:flutter/material.dart';
 import 'event_model.dart';
-import 'fighter_profile_model.dart';
+import 'fighter_model.dart';
 
 enum EventStatus {
   draft,
@@ -37,7 +37,7 @@ class EnhancedEventRegistration {
   
   // Optional related data (populated by repository)
   final Event? event;
-  final FighterProfile? fighterProfile;
+  final Fighter? fighterProfile;
   
   EnhancedEventRegistration({
     required this.id,
@@ -71,7 +71,7 @@ class EnhancedEventRegistration {
       rejectionReason: json['rejectionReason'],
       notes: json['notes'],
       event: json['event'] != null ? Event.fromJson(json['event']) : null,
-      fighterProfile: json['fighterProfile'] != null ? FighterProfile.fromJson(json['fighterProfile']) : null,
+      fighterProfile: json['fighterProfile'] != null ? Fighter.fromJson(json['fighterProfile'] as Map<String, dynamic>) : null,
     );
   }
   
@@ -106,7 +106,7 @@ class EnhancedEventRegistration {
     String? rejectionReason,
     String? notes,
     Event? event,
-    FighterProfile? fighterProfile,
+    Fighter? fighterProfile,
   }) {
     return EnhancedEventRegistration(
       id: id ?? this.id,

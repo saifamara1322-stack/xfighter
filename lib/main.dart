@@ -1,54 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xfighter/core/theme/app_theme.dart';
+import 'package:xfighter/core/routes/app_router.dart';
 import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
-import 'package:xfighter/modules/auth/bindings/auth_binding.dart';
-import 'package:xfighter/modules/auth/routes/auth_routes.dart';
-import 'package:xfighter/modules/auth/views/login_view.dart';
-import 'package:xfighter/modules/dashboard/bindings/dashboard_binding.dart';
-import 'package:xfighter/modules/dashboard/views/dashboard_view.dart';
 
-//json-server db.json --port 3000
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize global controllers
-  Get.put(AuthController());
-  
+
+  // Global controllers (available for the entire app lifetime)
+  Get.put(AuthController(), permanent: true);
+
   runApp(const XFighterApp());
 }
 
 class XFighterApp extends StatelessWidget {
   const XFighterApp({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'XFIGHTER - Platforme de Combat Tunisienne',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: '/',
-      getPages: [
-        ...AuthRoutes.pages,
-        GetPage(
-          name: '/dashboard',
-          page: () => const DashboardView(),
-          binding: DashboardBinding(),
+      initialRoute: AppRouter.initial,
+      getPages: AppRouter.pages,
+      // Fallback for unknown routes
+      unknownRoute: GetPage(
+        name: '/not-found',
+        page: () => Scaffold(
+          appBar: AppBar(title: const Text('Not Found')),
+          body: const Center(child: Text('Page not found')),
         ),
-      ],
+      ),
     );
   }
 }
-  
-  @override
-  Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
-    
-    return Obx(() {
-      if (authController.isLoggedIn.value) {
-        return  DashboardView();
-      } else {
-        return LoginView();
-      }
-    });
-  }

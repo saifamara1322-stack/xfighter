@@ -19,11 +19,11 @@ class DashboardController extends GetxController {
     currentUser.value = await _authRepository.getCurrentUser();
   }
   
-  bool isFighter() => currentUser.value?.role == UserRole.fighter;
-  bool isCoach() => currentUser.value?.role == UserRole.coach;
-  bool isOrganizer() => currentUser.value?.role == UserRole.organizer;
-  bool isAdmin() => currentUser.value?.role == UserRole.admin;
-  bool isReferee() => currentUser.value?.role == UserRole.referee;
+  bool isFighter() => currentUser.value?.role == UserRole.FIGHTER;
+  bool isCoach() => currentUser.value?.role == UserRole.COACH;
+  bool isOrganizer() => currentUser.value?.role == UserRole.ORGANIZER;
+  bool isAdmin() => currentUser.value?.role == UserRole.ADMIN;
+  bool isReferee() => currentUser.value?.role == UserRole.REFEREE;
   
   Future<void> logout() async {
     await _authRepository.logout();

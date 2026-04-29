@@ -7,5 +7,9 @@ class CoachFightersTab extends StatelessWidget {
   final CoachController _coachController = Get.find<CoachController>();
   
   CoachFightersTab({super.key});
-  // ...existing code...
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: Text('Coach fighters — coming soon'));
+  }
 }

@@ -8,7 +8,7 @@ class FighterRoutes {
   static List<GetPage> pages = [
     GetPage(
       name: fighterProfile,
-      page: () => const FighterProfileView(),
+      page: () => FighterProfileView(),
       binding: FighterBinding(),
     ),
   ];

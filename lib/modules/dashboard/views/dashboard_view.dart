@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:xfighter/core/routes/app_router.dart';
 import 'package:xfighter/modules/dashboard/controllers/dashboard_controller.dart';
 import 'package:xfighter/data/models/user_model.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     final DashboardController controller = Get.put(DashboardController());
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
       appBar: AppBar(
@@ -45,12 +46,13 @@ class DashboardView extends StatelessWidget {
             ),
           );
         }
-        
         return _buildDashboardContent(user);
       }),
     );
   }
-  
+
+  // ── Drawer ──────────────────────────────────────────────────────────────────
+
   Widget _buildDrawer(DashboardController controller) {
     return Drawer(
       backgroundColor: const Color(0xFF0A0A0A),
@@ -89,13 +91,9 @@ class DashboardView extends StatelessWidget {
                 ),
                 accountEmail: Text(
                   user?.email ?? '',
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontSize: 12),
                 ),
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
-                ),
+                decoration: const BoxDecoration(color: Colors.transparent),
               ),
             );
           }),
@@ -103,53 +101,27 @@ class DashboardView extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _buildDrawerItem(
-                  icon: Icons.dashboard,
-                  label: 'DASHBOARD',
-                  onTap: () => Get.back(),
-                ),
-                _buildDrawerItem(
-                  icon: Icons.person,
-                  label: 'MY PROFILE',
-                  onTap: () {
-                    Get.back();
-                    _navigateToProfile(controller);
-                  },
-                ),
+                _item(Icons.dashboard, 'DASHBOARD', () => Get.back()),
+                _item(Icons.person, 'MY PROFILE', () {
+                  Get.back();
+                  _navigateToProfile(Get.find<DashboardController>());
+                }),
                 const Divider(color: Colors.white24, height: 1),
-                
                 Obx(() {
-                  if (controller.isFighter()) {
-                    return _buildFighterMenu();
-                  } else if (controller.isCoach()) {
-                    return _buildCoachMenu();
-                  } else if (controller.isOrganizer()) {
-                    return _buildOrganizerMenu();
-                  } else if (controller.isAdmin()) {
-                    return _buildAdminMenu();
-                  }
+                  final c = Get.find<DashboardController>();
+                  if (c.isFighter()) return _buildFighterMenu();
+                  if (c.isCoach()) return _buildCoachMenu();
+                  if (c.isOrganizer()) return _buildOrganizerMenu();
+                  if (c.isAdmin()) return _buildAdminMenu();
                   return const SizedBox();
                 }),
-                
                 const Divider(color: Colors.white24, height: 1),
-                
-                _buildDrawerItem(
-                  icon: Icons.settings,
-                  label: 'SETTINGS',
-                  onTap: () {
-                    Get.back();
-                    Get.toNamed('/settings');
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.logout,
-                  label: 'LOGOUT',
-                  onTap: () {
-                    Get.back();
-                    controller.showLogoutDialog();
-                  },
-                  isRed: true,
-                ),
+                _item(Icons.settings, 'SETTINGS',
+                    () { Get.back(); Get.toNamed(AppRouter.settings); }),
+                _item(Icons.logout, 'LOGOUT', () {
+                  Get.back();
+                  Get.find<DashboardController>().showLogoutDialog();
+                }, isRed: true),
               ],
             ),
           ),
@@ -157,192 +129,60 @@ class DashboardView extends StatelessWidget {
       ),
     );
   }
-  
-  Widget _buildFighterMenu() {
-    return Column(
-      children: [
-        _buildDrawerItem(
-          icon: Icons.fitness_center,
-          label: 'MY RECORD',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/fighter-profile');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.event,
-          label: 'UPCOMING FIGHTS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/events');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.event_note,
-          label: 'EVENTS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/events');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.assignment_turned_in,
-          label: 'MY REGISTRATIONS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/my-registrations');
-          },
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildCoachMenu() {
-    return Column(
-      children: [
-        _buildDrawerItem(
-          icon: Icons.people,
-          label: 'MY ATHLETES',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/coach-athletes');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.school,
-          label: 'COACH PROFILE',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/coach-profile');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.business,
-          label: 'MANAGE GYMS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/gyms');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.assignment_turned_in,
-          label: 'PENDING REGISTRATIONS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/pending-registrations');
-          },
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildOrganizerMenu() {
-    return Column(
-      children: [
-        _buildDrawerItem(
-          icon: Icons.event,
-          label: 'MANAGE EVENTS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/admin-events');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.people,
-          label: 'FIGHTER REGISTRATIONS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/fighter-registrations');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.business,
-          label: 'MANAGE GYMS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/gyms');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.assignment_turned_in,
-          label: 'FIGHT CARDS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/fight-cards');
-          },
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildAdminMenu() {
-    return Column(
-      children: [
-        _buildDrawerItem(
-          icon: Icons.people,
-          label: 'ALL USERS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/users');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.event,
-          label: 'MANAGE EVENTS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/admin-events');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.business,
-          label: 'MANAGE GYMS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/gyms');
-          },
-        ),
-        _buildDrawerItem(
-          icon: Icons.analytics,
-          label: 'STATISTICS',
-          onTap: () {
-            Get.back();
-            Get.toNamed('/statistics');
-          },
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool isRed = false,
-  }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isRed ? const Color(0xFFE31837) : Colors.white70,
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          color: isRed ? const Color(0xFFE31837) : Colors.white,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      onTap: onTap,
-    );
-  }
-  
+
+  // ── Role menus ──────────────────────────────────────────────────────────────
+
+  Widget _buildFighterMenu() => Column(children: [
+        _item(Icons.fitness_center, 'MY RECORD',
+            () { Get.back(); Get.toNamed(AppRouter.fighterProfile); }),
+        _item(Icons.event, 'EVENTS',
+            () { Get.back(); Get.toNamed(AppRouter.events); }),
+        _item(Icons.assignment_turned_in, 'MY REGISTRATIONS',
+            () { Get.back(); Get.toNamed(AppRouter.myRegistrations); }),
+      ]);
+
+  Widget _buildCoachMenu() => Column(children: [
+        _item(Icons.people, 'MY ATHLETES',
+            () { Get.back(); Get.toNamed(AppRouter.coachAthletes); }),
+        _item(Icons.school, 'COACH PROFILE',
+            () { Get.back(); Get.toNamed(AppRouter.coachProfile); }),
+        _item(Icons.business, 'MANAGE GYMS',
+            () { Get.back(); Get.toNamed(AppRouter.gyms); }),
+        _item(Icons.assignment_turned_in, 'PENDING REGISTRATIONS',
+            () { Get.back(); Get.toNamed(AppRouter.pendingRegistrations); }),
+      ]);
+
+  Widget _buildOrganizerMenu() => Column(children: [
+        _item(Icons.event, 'MANAGE EVENTS',
+            () { Get.back(); Get.toNamed(AppRouter.adminEvents); }),
+        _item(Icons.people, 'FIGHTER REGISTRATIONS',
+            () { Get.back(); Get.toNamed(AppRouter.fighterRegistrations); }),
+        _item(Icons.business, 'MANAGE GYMS',
+            () { Get.back(); Get.toNamed(AppRouter.gyms); }),
+        _item(Icons.assignment_turned_in, 'FIGHT CARDS',
+            () { Get.back(); Get.toNamed(AppRouter.fightCards); }),
+      ]);
+
+  Widget _buildAdminMenu() => Column(children: [
+        _item(Icons.people, 'ALL USERS',
+            () { Get.back(); Get.toNamed(AppRouter.users); }),
+        _item(Icons.event, 'MANAGE EVENTS',
+            () { Get.back(); Get.toNamed(AppRouter.adminEvents); }),
+        _item(Icons.business, 'MANAGE GYMS',
+            () { Get.back(); Get.toNamed(AppRouter.gyms); }),
+        _item(Icons.analytics, 'STATISTICS',
+            () { Get.back(); Get.toNamed(AppRouter.statistics); }),
+      ]);
+
+  // ── Dashboard content ───────────────────────────────────────────────────────
+
   Widget _buildDashboardContent(User user) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome Card
+          // Welcome card
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -355,56 +195,44 @@ class DashboardView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Welcome back,',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 14,
-                  ),
-                ),
+                Text('Welcome back,',
+                    style: TextStyle(
+                        color: Colors.white.withAlpha(204), fontSize: 14)),
                 const SizedBox(height: 4),
-                Text(
-                  user.fullName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(user.fullName,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withAlpha(51),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    user.roleDisplayName,
+                    user.role.displayName,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
-          // Quick Actions
-          const Text(
-            'QUICK ACTIONS',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
-            ),
-          ),
+          const Text('QUICK ACTIONS',
+              style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1)),
           const SizedBox(height: 12),
-          
+
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -413,129 +241,110 @@ class DashboardView extends StatelessWidget {
             crossAxisSpacing: 12,
             childAspectRatio: 1.5,
             children: [
-              _buildQuickActionCard(
-                icon: Icons.event,
-                label: 'Events',
-                onTap: () => Get.toNamed('/events'),
-              ),
-              _buildQuickActionCard(
-                icon: Icons.business,
-                label: 'Gyms',
-                onTap: () => Get.toNamed('/gyms'),
-              ),
-              _buildQuickActionCard(
-                icon: Icons.people,
-                label: 'Users',
-                onTap: () => Get.toNamed('/users'),
-              ),
-              _buildQuickActionCard(
-                icon: Icons.sports_mma,
-                label: 'Fighters',
-                onTap: () => Get.toNamed('/fighters'),
-              ),
+              _quickAction(Icons.event, 'Events',
+                  () => Get.toNamed(AppRouter.events)),
+              _quickAction(Icons.business, 'Gyms',
+                  () => Get.toNamed(AppRouter.gyms)),
+              _quickAction(Icons.people, 'Users',
+                  () => Get.toNamed(AppRouter.users)),
+              _quickAction(Icons.sports_mma, 'Fighters',
+                  () => Get.toNamed(AppRouter.fighters)),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
-          // Recent Activity
-          const Text(
-            'RECENT ACTIVITY',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
-            ),
-          ),
+          const Text('RECENT ACTIVITY',
+              style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1)),
           const SizedBox(height: 12),
-          
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withAlpha(13),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-              ),
+              border: Border.all(color: Colors.white.withAlpha(26)),
             ),
             child: const Center(
-              child: Text(
-                'No recent activity',
-                style: TextStyle(color: Colors.white54),
-              ),
+              child: Text('No recent activity',
+                  style: TextStyle(color: Colors.white54)),
             ),
           ),
         ],
       ),
     );
   }
-  
-  Widget _buildQuickActionCard({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  Widget _item(IconData icon, String label, VoidCallback onTap,
+      {bool isRed = false}) {
+    return ListTile(
+      leading:
+          Icon(icon, color: isRed ? const Color(0xFFE31837) : Colors.white70),
+      title: Text(label,
+          style: TextStyle(
+              color: isRed ? const Color(0xFFE31837) : Colors.white,
+              fontWeight: FontWeight.w500)),
+      onTap: onTap,
+    );
+  }
+
+  Widget _quickAction(IconData icon, String label, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withAlpha(13),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.1),
-          ),
+          border: Border.all(color: Colors.white.withAlpha(26)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: const Color(0xFFE31837),
-              size: 28,
-            ),
+            Icon(icon, color: const Color(0xFFE31837), size: 28),
             const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ),
     );
   }
-  
+
   IconData _getRoleIcon(UserRole? role) {
     switch (role) {
-      case UserRole.fighter:
+      case UserRole.FIGHTER:
         return Icons.sports_mma;
-      case UserRole.coach:
+      case UserRole.COACH:
         return Icons.sports;
-      case UserRole.organizer:
+      case UserRole.ORGANIZER:
         return Icons.event;
-      case UserRole.referee:
+      case UserRole.REFEREE:
         return Icons.gavel;
-      case UserRole.admin:
+      case UserRole.ADMIN:
+      case UserRole.SUPER_ADMIN:
         return Icons.admin_panel_settings;
       default:
         return Icons.person;
     }
   }
-  
+
   void _navigateToProfile(DashboardController controller) {
     if (controller.isFighter()) {
-      Get.toNamed('/fighter-profile');
+      Get.toNamed(AppRouter.fighterProfile);
     } else if (controller.isCoach()) {
-      Get.toNamed('/coach-profile');
+      Get.toNamed(AppRouter.coachProfile);
     } else if (controller.isOrganizer()) {
-      Get.toNamed('/organizer-profile');
+      Get.toNamed(AppRouter.organizerProfile);
     } else if (controller.isAdmin()) {
-      Get.toNamed('/admin-profile');
+      Get.toNamed(AppRouter.adminProfile);
     }
   }
 }

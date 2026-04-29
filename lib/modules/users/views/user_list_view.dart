@@ -7,7 +7,7 @@ class UserListView extends StatelessWidget {
   final UserController controller = Get.put(UserController());
 
   UserListView({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,9 +22,7 @@ class UserListView extends StatelessWidget {
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
             onSelected: (value) {
-              if (value == 'clear') {
-                controller.clearFilters();
-              }
+              if (value == 'clear') controller.clearFilters();
             },
             itemBuilder: (context) => [
               const PopupMenuItem(
@@ -40,7 +38,6 @@ class UserListView extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                // Search bar
                 TextField(
                   decoration: InputDecoration(
                     hintText: 'Search by name or email...',
@@ -48,88 +45,92 @@ class UserListView extends StatelessWidget {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                   ),
                   onChanged: (query) => controller.updateSearchQuery(query),
                 ),
                 const SizedBox(height: 8),
-                // Status filter chips
                 Obx(() => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Status:',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          FilterChip(
-                            label: const Text('All'),
-                            selected: controller.filterStatus.value == 'all',
-                            onSelected: (_) => controller.updateFilterStatus('all'),
-                          ),
-                          const SizedBox(width: 8),
-                          ...UserStatus.values.map((status) {
-                            final statusString = UserStatus.statusToString(status);
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                label: Text(statusString.toUpperCase()),
-                                selected: controller.filterStatus.value == statusString,
-                                onSelected: (_) => controller.updateFilterStatus(statusString),
-                                backgroundColor: _getStatusColor(status).withOpacity(0.1),
-                                selectedColor: _getStatusColor(status).withOpacity(0.3),
-                                checkmarkColor: _getStatusColor(status),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Status:',
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              FilterChip(
+                                label: const Text('All'),
+                                selected:
+                                    controller.filterStatus.value == 'all',
+                                onSelected: (_) =>
+                                    controller.updateFilterStatus('all'),
                               ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  ],
-                )),
+                              const SizedBox(width: 8),
+                              ...UserStatus.values.map((status) {
+                                final s = status.name;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: Text(s),
+                                    selected:
+                                        controller.filterStatus.value == s,
+                                    onSelected: (_) =>
+                                        controller.updateFilterStatus(s),
+                                    backgroundColor:
+                                        status.color.withAlpha(26),
+                                    selectedColor: status.color.withAlpha(77),
+                                    checkmarkColor: status.color,
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )),
                 const SizedBox(height: 8),
-                // Role filter chips
                 Obx(() => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Role:',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          FilterChip(
-                            label: const Text('All'),
-                            selected: controller.filterRole.value == 'all',
-                            onSelected: (_) => controller.updateFilterRole('all'),
-                          ),
-                          const SizedBox(width: 8),
-                          ...UserRole.values.map((role) {
-                            final roleString = UserRole.roleToString(role);
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                label: Text(roleString.toUpperCase()),
-                                selected: controller.filterRole.value == roleString,
-                                onSelected: (_) => controller.updateFilterRole(roleString),
-                                backgroundColor: _getRoleColor(role).withOpacity(0.1),
-                                selectedColor: _getRoleColor(role).withOpacity(0.3),
-                                checkmarkColor: _getRoleColor(role),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Role:',
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              FilterChip(
+                                label: const Text('All'),
+                                selected: controller.filterRole.value == 'all',
+                                onSelected: (_) =>
+                                    controller.updateFilterRole('all'),
                               ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  ],
-                )),
+                              const SizedBox(width: 8),
+                              ...UserRole.values.map((role) {
+                                final r = role.name;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: Text(r),
+                                    selected: controller.filterRole.value == r,
+                                    onSelected: (_) =>
+                                        controller.updateFilterRole(r),
+                                    backgroundColor: role.color.withAlpha(26),
+                                    selectedColor: role.color.withAlpha(77),
+                                    checkmarkColor: role.color,
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )),
               ],
             ),
           ),
@@ -137,31 +138,21 @@ class UserListView extends StatelessWidget {
       ),
       body: Obx(() {
         if (controller.isLoading.value && controller.users.isEmpty) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
-        
+
         final filteredUsers = controller.filteredUsers;
-        
+
         if (filteredUsers.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.person_off,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
+                Icon(Icons.person_off, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
-                Text(
-                  'No users found',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey[600],
-                  ),
-                ),
+                Text('No users found',
+                    style:
+                        TextStyle(fontSize: 18, color: Colors.grey[600])),
                 if (controller.searchQuery.value.isNotEmpty ||
                     controller.filterStatus.value != 'all' ||
                     controller.filterRole.value != 'all')
@@ -173,7 +164,7 @@ class UserListView extends StatelessWidget {
             ),
           );
         }
-        
+
         return RefreshIndicator(
           onRefresh: () => controller.fetchUsers(),
           child: ListView.builder(
@@ -181,7 +172,7 @@ class UserListView extends StatelessWidget {
             itemCount: filteredUsers.length,
             itemBuilder: (context, index) {
               final user = filteredUsers[index];
-              return UserCard(user: user, controller: controller);
+              return _UserCard(user: user, controller: controller);
             },
           ),
         );
@@ -192,179 +183,103 @@ class UserListView extends StatelessWidget {
       ),
     );
   }
-  
-  Color _getStatusColor(UserStatus status) {
-    switch (status) {
-      case UserStatus.active:
-        return Colors.green;
-      case UserStatus.pending:
-        return Colors.orange;
-      case UserStatus.suspended:
-        return Colors.red;
-    }
-  }
-  
-  Color _getRoleColor(UserRole role) {
-    switch (role) {
-      case UserRole.fighter:
-        return Colors.blue;
-      case UserRole.coach:
-        return Colors.purple;
-      case UserRole.organizer:
-        return Colors.teal;
-      case UserRole.referee:
-        return Colors.amber;
-      case UserRole.admin:
-        return Colors.red;
-    }
-  }
-  
+
   void _showAddUserDialog(BuildContext context, UserController controller) {
     final emailController = TextEditingController();
-    final firstNameController = TextEditingController();
-    final lastNameController = TextEditingController();
-    UserRole selectedRole = UserRole.fighter;
-    UserStatus selectedStatus = UserStatus.pending;
-    bool isVerified = false;
-    
+    final fullNameController = TextEditingController();
+    UserRole selectedRole = UserRole.FIGHTER;
+    UserStatus selectedStatus = UserStatus.PENDING;
+
     Get.dialog(
-      AlertDialog(
-        title: const Text('Add New User'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
+      StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: const Text('Add New User'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                      labelText: 'Email', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.emailAddress,
                 ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: firstNameController,
-                decoration: const InputDecoration(
-                  labelText: 'First Name',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: fullNameController,
+                  decoration: const InputDecoration(
+                      labelText: 'Full Name', border: OutlineInputBorder()),
                 ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: lastNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Last Name',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<UserRole>(
+                  value: selectedRole,
+                  decoration: const InputDecoration(
+                      labelText: 'Role', border: OutlineInputBorder()),
+                  items: UserRole.values
+                      .map((r) => DropdownMenuItem(
+                          value: r, child: Text(r.displayName)))
+                      .toList(),
+                  onChanged: (v) => setState(() => selectedRole = v!),
                 ),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<UserRole>(
-                value: selectedRole,
-                decoration: const InputDecoration(
-                  labelText: 'Role',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<UserStatus>(
+                  value: selectedStatus,
+                  decoration: const InputDecoration(
+                      labelText: 'Status', border: OutlineInputBorder()),
+                  items: UserStatus.values
+                      .map((s) => DropdownMenuItem(
+                          value: s, child: Text(s.displayName)))
+                      .toList(),
+                  onChanged: (v) => setState(() => selectedStatus = v!),
                 ),
-                items: UserRole.values.map((role) {
-                  return DropdownMenuItem(
-                    value: role,
-                    child: Text(role.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  selectedRole = value!;
-                },
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<UserStatus>(
-                value: selectedStatus,
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  border: OutlineInputBorder(),
-                ),
-                items: UserStatus.values.map((status) {
-                  return DropdownMenuItem(
-                    value: status,
-                    child: Text(UserStatus.statusToString(status).toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  selectedStatus = value!;
-                },
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Checkbox(
-                    value: isVerified,
-                    onChanged: (value) {
-                      isVerified = value ?? false;
-                      // Rebuild dialog with new value
-                      Get.back();
-                      _showAddUserDialog(context, controller);
-                    },
-                  ),
-                  const Text('Verified User'),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+                onPressed: () => Get.back(), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                // User creation is not supported by API directly — stub
+                Get.back();
+                Get.snackbar('Info',
+                    'User creation is handled via registration endpoints',
+                    snackPosition: SnackPosition.BOTTOM);
+              },
+              child: const Text('Add'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newUser = User(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
-                email: emailController.text,
-                firstName: firstNameController.text,
-                lastName: lastNameController.text,
-                role: selectedRole,
-                status: selectedStatus,
-                verified: isVerified,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              );
-              controller.addUser(newUser);
-              Get.back();
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
     );
   }
 }
 
-class UserCard extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// UserCard
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _UserCard extends StatelessWidget {
   final User user;
   final UserController controller;
-  
-  const UserCard({
-    super.key,
-    required this.user,
-    required this.controller,
-  });
-  
+
+  const _UserCard({required this.user, required this.controller});
+
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getRoleColor(user.role),
+          backgroundColor: user.role.color,
           child: Text(
-            user.firstName.isNotEmpty ? user.firstName[0].toUpperCase() : '?',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?',
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
-        title: Text(
-          user.fullName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(user.fullName,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -372,267 +287,38 @@ class UserCard extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(user.status).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _getStatusColor(user.status),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        UserStatus.statusToString(user.status).toUpperCase(),
-                        style: TextStyle(
-                          color: _getStatusColor(user.status),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _StatusBadge(status: user.status),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: _getRoleColor(user.role).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    user.roleDisplayName.toUpperCase(),
-                    style: TextStyle(
-                      color: _getRoleColor(user.role),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                if (user.verified)
+                _RoleBadge(role: user.role),
+                if (user.verifiedAt != null) ...[
                   const SizedBox(width: 8),
-                if (user.verified)
-                  const Icon(
-                    Icons.verified,
-                    size: 16,
-                    color: Colors.blue,
-                  ),
+                  const Icon(Icons.verified, size: 16, color: Colors.blue),
+                ],
               ],
             ),
           ],
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
-            if (value == 'edit') {
-              _showEditDialog(context, user, controller);
-            } else if (value == 'delete') {
-              _showDeleteConfirmDialog(context, user, controller);
-            }
+            if (value == 'view') _showUserDetails(context, user);
           },
           itemBuilder: (context) => [
             const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 20),
-                  SizedBox(width: 8),
-                  Text('Edit'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, size: 20, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Delete', style: TextStyle(color: Colors.red)),
-                ],
-              ),
+              value: 'view',
+              child: Row(children: [
+                Icon(Icons.info_outline, size: 20),
+                SizedBox(width: 8),
+                Text('View Details'),
+              ]),
             ),
           ],
         ),
-        onTap: () => _showUserDetailsDialog(context, user),
+        onTap: () => _showUserDetails(context, user),
       ),
     );
   }
-  
-  Color _getStatusColor(UserStatus status) {
-    switch (status) {
-      case UserStatus.active:
-        return Colors.green;
-      case UserStatus.pending:
-        return Colors.orange;
-      case UserStatus.suspended:
-        return Colors.red;
-    }
-  }
-  
-  Color _getRoleColor(UserRole role) {
-    switch (role) {
-      case UserRole.fighter:
-        return Colors.blue;
-      case UserRole.coach:
-        return Colors.purple;
-      case UserRole.organizer:
-        return Colors.teal;
-      case UserRole.referee:
-        return Colors.amber;
-      case UserRole.admin:
-        return Colors.red;
-    }
-  }
-  
-  void _showEditDialog(BuildContext context, User user, UserController controller) {
-    final emailController = TextEditingController(text: user.email);
-    final firstNameController = TextEditingController(text: user.firstName);
-    final lastNameController = TextEditingController(text: user.lastName);
-    UserRole selectedRole = user.role;
-    UserStatus selectedStatus = user.status;
-    bool isVerified = user.verified;
-    
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Edit User'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: firstNameController,
-                decoration: const InputDecoration(
-                  labelText: 'First Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: lastNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Last Name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<UserRole>(
-                value: selectedRole,
-                decoration: const InputDecoration(
-                  labelText: 'Role',
-                  border: OutlineInputBorder(),
-                ),
-                items: UserRole.values.map((role) {
-                  return DropdownMenuItem(
-                    value: role,
-                    child: Text(role.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  selectedRole = value!;
-                },
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<UserStatus>(
-                value: selectedStatus,
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  border: OutlineInputBorder(),
-                ),
-                items: UserStatus.values.map((status) {
-                  return DropdownMenuItem(
-                    value: status,
-                    child: Text(UserStatus.statusToString(status).toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  selectedStatus = value!;
-                },
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Checkbox(
-                    value: isVerified,
-                    onChanged: (value) {
-                      isVerified = value ?? false;
-                      Get.back();
-                      _showEditDialog(context, user, controller);
-                    },
-                  ),
-                  const Text('Verified User'),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final updatedUser = User(
-                id: user.id,
-                email: emailController.text,
-                firstName: firstNameController.text,
-                lastName: lastNameController.text,
-                role: selectedRole,
-                status: selectedStatus,
-                verified: isVerified,
-                createdAt: user.createdAt,
-                updatedAt: DateTime.now(),
-              );
-              controller.updateUser(updatedUser);
-              Get.back();
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  void _showDeleteConfirmDialog(BuildContext context, User user, UserController controller) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete ${user.fullName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              controller.deleteUser(user.id);
-              Get.back();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  void _showUserDetailsDialog(BuildContext context, User user) {
+
+  void _showUserDetails(BuildContext context, User user) {
     Get.dialog(
       AlertDialog(
         title: Text(user.fullName),
@@ -641,56 +327,97 @@ class UserCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('Email:', user.email),
-              const SizedBox(height: 8),
-              _buildDetailRow('First Name:', user.firstName),
-              const SizedBox(height: 8),
-              _buildDetailRow('Last Name:', user.lastName),
-              const SizedBox(height: 8),
-              _buildDetailRow('Role:', user.roleDisplayName),
-              const SizedBox(height: 8),
-              _buildDetailRow('Status:', UserStatus.statusToString(user.status).toUpperCase()),
-              const SizedBox(height: 8),
-              _buildDetailRow('Verified:', user.verified ? 'Yes' : 'No'),
-              const SizedBox(height: 8),
-              _buildDetailRow('Created:', _formatDate(user.createdAt)),
-              const SizedBox(height: 8),
-              _buildDetailRow('Updated:', _formatDate(user.updatedAt)),
-              const SizedBox(height: 8),
-              _buildDetailRow('ID:', user.id),
+              _DetailRow('Email:', user.email),
+              _DetailRow('Full Name:', user.fullName),
+              _DetailRow('Role:', user.role.displayName),
+              _DetailRow('Status:', user.status.displayName),
+              _DetailRow('Country ID:', user.countryId ?? '—'),
+              _DetailRow('Created:', _fmt(user.createdAt)),
+              _DetailRow('Verified:', _fmt(user.verifiedAt)),
+              _DetailRow('ID:', user.id),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
+              onPressed: () => Get.back(), child: const Text('Close')),
         ],
       ),
     );
   }
-  
-  Widget _buildDetailRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+
+  String _fmt(DateTime? dt) {
+    if (dt == null) return '—';
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final UserStatus status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: status.color.withAlpha(51),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration:
+                BoxDecoration(shape: BoxShape.circle, color: status.color),
           ),
+          const SizedBox(width: 4),
+          Text(status.displayName,
+              style: TextStyle(
+                  color: status.color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500)),
+        ]),
+      );
+}
+
+class _RoleBadge extends StatelessWidget {
+  final UserRole role;
+  const _RoleBadge({required this.role});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: role.color.withAlpha(51),
+          borderRadius: BorderRadius.circular(12),
         ),
-        Expanded(
-          child: Text(value),
+        child: Text(role.displayName,
+            style: TextStyle(
+                color: role.color,
+                fontSize: 12,
+                fontWeight: FontWeight.w500)),
+      );
+}
+
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DetailRow(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 90,
+              child: Text(label,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            Expanded(child: Text(value)),
+          ],
         ),
-      ],
-    );
-  }
-  
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
-        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
+      );
 }

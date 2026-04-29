@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../data/repositories/api_client.dart';
 import '../controllers/registration_controller.dart';
-import '../../../data/models/event_model.dart';
+import '../../../data/models/enhanced_event_registration.dart';
 import '../../../data/models/user_model.dart';
 
 class FighterRegistrationsView extends StatelessWidget {
@@ -51,7 +50,7 @@ class FighterRegistrationsView extends StatelessWidget {
       }
       
       return RefreshIndicator(
-        onRefresh: () => _controller.fetchFighterRegistrations(),
+        onRefresh: () => _controller.loadFighterRegistrations(),
         child: ListView.builder(
           padding: const EdgeInsets.all(8),
           itemCount: _controller.fighterRegistrations.length,
@@ -69,7 +68,7 @@ class FighterRegistrationsView extends StatelessWidget {
 }
 
 class FighterRegistrationCard extends StatelessWidget {
-  final Registration registration;
+  final EnhancedEventRegistration registration;
   final RegistrationController controller;
   
   const FighterRegistrationCard({
@@ -88,16 +87,15 @@ class FighterRegistrationCard extends StatelessWidget {
           child: const Icon(Icons.sports_mma, color: Colors.blue),
         ),
         title: Text(
-          registration.event?.name ?? 'Event Registration',
+          'Event: ${registration.eventId}',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (registration.user != null)
-              Text('Fighter: ${registration.user!.fullName}'),
+            Text('Fighter ID: ${registration.fighterId}'),
             const SizedBox(height: 4),
-            _buildStatusChip(registration.status),
+            _buildStatusChip(registration.status.name),
           ],
         ),
         children: [
@@ -106,29 +104,11 @@ class FighterRegistrationCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Event Details
-                if (registration.event != null) ...[
-                  const Text(
-                    'Event Details',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
+                if (registration.notes != null) ...[
+                  const Text('Notes',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
-                  _buildInfoRow('Date:', _formatDate(registration.event!.date)),
-                  _buildInfoRow('Location:', registration.event!.location),
-                  _buildInfoRow('Venue:', registration.event!.venue),
-                  const Divider(),
-                ],
-                
-                // Fighter Details
-                if (registration.user != null) ...[
-                  const Text(
-                    'Fighter Details',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildInfoRow('Name:', registration.user!.fullName),
-                  _buildInfoRow('Email:', registration.user!.email),
-                  _buildInfoRow('Role:', registration.user!.roleDisplayName),
+                  Text(registration.notes!),
                   const Divider(),
                 ],
                 
@@ -139,13 +119,14 @@ class FighterRegistrationCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _buildInfoRow('Registered:', _formatDate(registration.registeredAt)),
-                _buildInfoRow('Status:', registration.status.toUpperCase()),
+                _buildInfoRow('Status:', registration.status.name.toUpperCase()),
+                _buildInfoRow('Weight Class:', registration.weightClass),
                 
                 const SizedBox(height: 16),
                 // Action Buttons
                 Row(
                   children: [
-                    if (registration.status == 'pending')
+                    if (registration.status == RegistrationStatus.pending)
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => _showApprovalDialog(context, registration, 'approved'),
@@ -156,7 +137,7 @@ class FighterRegistrationCard extends StatelessWidget {
                           child: const Text('Approve'),
                         ),
                       ),
-                    if (registration.status == 'pending') ...[
+                    if (registration.status == RegistrationStatus.pending) ...[
                       const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton(
@@ -169,16 +150,6 @@ class FighterRegistrationCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (registration.status == 'approved')
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => _showApprovalDialog(context, registration, 'cancelled'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.orange,
-                          ),
-                          child: const Text('Cancel Registration'),
-                        ),
-                      ),
                   ],
                 ),
               ],
@@ -263,7 +234,7 @@ class FighterRegistrationCard extends StatelessWidget {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
   
-  void _showApprovalDialog(BuildContext context, Registration registration, String newStatus) {
+  void _showApprovalDialog(BuildContext context, EnhancedEventRegistration registration, String newStatus) {
     final String action = newStatus == 'approved' ? 'approve' : 
                          newStatus == 'rejected' ? 'reject' : 'cancel';
     final String message = newStatus == 'approved' 

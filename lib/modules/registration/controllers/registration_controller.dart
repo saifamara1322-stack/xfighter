@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/repositories/registration_repository.dart';
 import '../../../data/models/event_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../fighter/controllers/fighter_controller.dart';
 
@@ -32,8 +33,7 @@ class RegistrationController extends GetxController {
   final errorMessage = ''.obs;
   
   // Cache
-  final Map<String, Event?> _eventCache = {};
-  final Map<String, FighterProfile?> _fighterCache = {};
+  final Map<String, Map<String, dynamic>?> _eventCache = {};
 
   @override
   void onInit() {
@@ -55,14 +55,14 @@ class RegistrationController extends GetxController {
       
       // Load registrations based on user role
       switch (currentUser.role) {
-        case UserRole.fighter:
+        case UserRole.FIGHTER:
           await loadFighterRegistrations();
           break;
-        case UserRole.coach:
+        case UserRole.COACH:
           await loadCoachRegistrations();
           break;
-        case UserRole.organizer:
-        case UserRole.admin:
+        case UserRole.ORGANIZER:
+        case UserRole.ADMIN:
           await loadOrganizerRegistrations();
           break;
         default:
@@ -90,10 +90,9 @@ class RegistrationController extends GetxController {
       );
       fighterRegistrations.value = registrations;
       
-      // Cache events
       for (var registration in registrations) {
         if (registration.event != null) {
-          _eventCache[registration.eventId] = registration.event;
+          _eventCache[registration.eventId] = registration.event?.toJson();
         }
       }
     } catch (e) {
@@ -113,13 +112,9 @@ class RegistrationController extends GetxController {
       pendingCoachRegistrations.value = registrations;
       coachRegistrations.value = registrations;
       
-      // Cache events and fighters
       for (var registration in registrations) {
         if (registration.event != null) {
-          _eventCache[registration.eventId] = registration.event;
-        }
-        if (registration.fighterProfile != null) {
-          _fighterCache[registration.fighterId] = registration.fighterProfile;
+          _eventCache[registration.eventId] = registration.event?.toJson();
         }
       }
     } catch (e) {
@@ -143,13 +138,9 @@ class RegistrationController extends GetxController {
       );
       eventRegistrations.value = registrations;
       
-      // Cache events and fighters
       for (var registration in registrations) {
         if (registration.event != null) {
-          _eventCache[registration.eventId] = registration.event;
-        }
-        if (registration.fighterProfile != null) {
-          _fighterCache[registration.fighterId] = registration.fighterProfile;
+          _eventCache[registration.eventId] = registration.event?.toJson();
         }
       }
     } catch (e) {
@@ -228,7 +219,7 @@ class RegistrationController extends GetxController {
       isLoading.value = true;
       
       final currentUser = _authController.currentUser.value;
-      if (currentUser == null || currentUser.role != UserRole.fighter) {
+      if (currentUser == null || currentUser.role != UserRole.FIGHTER) {
         throw Exception('Only fighters can register for events');
       }
       
@@ -238,9 +229,9 @@ class RegistrationController extends GetxController {
         return false;
       }
       
-      // Get fighter's coach
-      final fighterProfile = _fighterController.fighterProfile.value;
-      final coachId = fighterProfile?.coachId;
+      // Get fighter's current profile
+      final fighterProfile = _fighterController.currentFighter.value;
+      final coachId = fighterProfile?.coach?.id;
       
       final registration = EnhancedEventRegistration(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -277,7 +268,7 @@ class RegistrationController extends GetxController {
       isLoading.value = true;
       
       final currentUser = _authController.currentUser.value;
-      if (currentUser == null || currentUser.role != UserRole.coach) {
+      if (currentUser == null || currentUser.role != UserRole.COACH) {
         throw Exception('Only coaches can perform this action');
       }
       
@@ -311,7 +302,7 @@ class RegistrationController extends GetxController {
       isLoading.value = true;
       
       final currentUser = _authController.currentUser.value;
-      if (currentUser == null || (currentUser.role != UserRole.organizer && currentUser.role != UserRole.admin)) {
+      if (currentUser == null || (currentUser.role != UserRole.ORGANIZER && currentUser.role != UserRole.ADMIN)) {
         throw Exception('Only organizers can perform this action');
       }
       
@@ -397,11 +388,11 @@ class RegistrationController extends GetxController {
       isCheckingEligibility.value = true;
       
       final currentUser = _authController.currentUser.value;
-      if (currentUser == null || currentUser.role != UserRole.fighter) {
+      if (currentUser == null || currentUser.role != UserRole.FIGHTER) {
         return false;
       }
       
-      final fighterProfile = _fighterController.fighterProfile.value;
+      final fighterProfile = _fighterController.currentFighter.value;
       if (fighterProfile == null) {
         _showSnackbar('Profile Required', 'Please complete your fighter profile first', backgroundColor: Colors.orange);
         return false;
@@ -573,21 +564,24 @@ class RegistrationController extends GetxController {
   // Refresh all data
   Future<void> refreshData() async {
     await loadUserRegistrations();
-    if (_authController.currentUser.value?.role == UserRole.fighter) {
-      await _fighterController.refreshProfile();
+    if (_authController.currentUser.value?.role == UserRole.FIGHTER) {
+      final userId = _authController.currentUser.value?.id;
+      if (userId != null) {
+        await _fighterController.loadFighterProfile(userId);
+      }
     }
   }
   
   // Get event from cache or fetch
-  Future<Event?> getEvent(String eventId) async {
+  Future<Map<String, dynamic>?> getEvent(String eventId) async {
     if (_eventCache.containsKey(eventId)) {
       return _eventCache[eventId];
     }
     
     try {
-      final event = await _registrationRepository.getEventDetails(eventId);
-      _eventCache[eventId] = event;
-      return event;
+      final eventData = await _registrationRepository.getEventDetails(eventId);
+      _eventCache[eventId] = eventData;
+      return eventData;
     } catch (e) {
       return null;
     }
@@ -611,23 +605,4 @@ class RegistrationController extends GetxController {
   }
 }
 
-// Eligibility Check Model
-class EligibilityCheck {
-  final bool isEligible;
-  final String? reason;
-  final Map<String, dynamic>? details;
-  
-  EligibilityCheck({
-    required this.isEligible,
-    this.reason,
-    this.details,
-  });
-  
-  factory EligibilityCheck.fromJson(Map<String, dynamic> json) {
-    return EligibilityCheck(
-      isEligible: json['isEligible'] ?? false,
-      reason: json['reason'],
-      details: json['details'],
-    );
-  }
-}
+// EligibilityCheck is defined in registration_repository.dart

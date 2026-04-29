@@ -10,5 +10,12 @@ class CoachProfileView extends StatelessWidget {
   final AuthController _authController = Get.find<AuthController>();
   
   CoachProfileView({super.key});
-  // ...existing code...
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Coach Profile')),
+      body: const Center(child: Text('Coach profile — coming soon')),
+    );
+  }
 }

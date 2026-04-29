@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xfighter/modules/gym/controllers/gym_controller.dart';
 import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
-import 'package:xfighter/data/models/gym_model.dart';
+import 'package:xfighter/data/models/club_model.dart';
 
 class GymListView extends StatelessWidget {
   const GymListView({super.key});
@@ -63,7 +63,7 @@ class GymListView extends StatelessWidget {
   }
   
   Widget _buildActiveGymsTab(GymController controller) {
-    final activeGyms = controller.gyms.where((g) => g.status == GymStatus.active).toList();
+    final activeGyms = controller.clubs.where((g) => g.status == ClubStatus.ACTIVE).toList();
     
     if (activeGyms.isEmpty) {
       return _buildEmptyState(
@@ -84,7 +84,8 @@ class GymListView extends StatelessWidget {
   }
   
   Widget _buildMyGymsTab(GymController controller, AuthController authController) {
-    if (controller.userGyms.isEmpty) {
+    final myClubs = controller.myClub.value != null ? [controller.myClub.value!] : <Club>[];
+    if (myClubs.isEmpty) {
       return _buildEmptyState(
         icon: Icons.add_business_outlined,
         title: 'NO GYMS REGISTERED',
@@ -96,9 +97,9 @@ class GymListView extends StatelessWidget {
     
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: controller.userGyms.length,
+      itemCount: myClubs.length,
       itemBuilder: (context, index) {
-        final gym = controller.userGyms[index];
+        final gym = myClubs[index];
         return _buildGymCard(gym, showStatus: true);
       },
     );
@@ -174,7 +175,7 @@ class GymListView extends StatelessWidget {
     );
   }
   
-  Widget _buildGymCard(Gym gym, {bool showStatus = false}) {
+  Widget _buildGymCard(Club gym, {bool showStatus = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -244,7 +245,7 @@ class GymListView extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          gym.city,
+                          gym.city ?? '—',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.white.withOpacity(0.7),
@@ -262,7 +263,7 @@ class GymListView extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '${gym.fighters.length} FIGHTERS',
+                          '${gym.description?.isNotEmpty == true ? "1" : "0"} FIGHTERS',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -277,11 +278,11 @@ class GymListView extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(gym.status).withOpacity(0.2),
+                          color: _getStatusColor(gym.status).withAlpha(51),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          gym.statusDisplayName.toUpperCase(),
+                          gym.status.displayName.toUpperCase(),
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
@@ -306,15 +307,15 @@ class GymListView extends StatelessWidget {
     );
   }
   
-  Color _getStatusColor(GymStatus status) {
+  Color _getStatusColor(ClubStatus status) {
     switch (status) {
-      case GymStatus.active:
+      case ClubStatus.ACTIVE:
         return Colors.green;
-      case GymStatus.pending:
+      case ClubStatus.PENDING:
+      case ClubStatus.NODOCS:
         return Colors.orange;
-      case GymStatus.suspended:
-        return Colors.red;
-      case GymStatus.rejected:
+      case ClubStatus.REFUSED:
+      case ClubStatus.DISABLED:
         return Colors.red;
     }
   }

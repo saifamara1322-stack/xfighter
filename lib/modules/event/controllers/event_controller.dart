@@ -12,7 +12,7 @@ class EventController extends GetxController {
   var upcomingEvents = <Event>[].obs;
   var organizerEvents = <Event>[].obs;
   var selectedEvent = Rx<Event?>(null);
-  var eventRegistrations = <EventRegistration>[].obs;
+  var eventRegistrations = <Map<String, dynamic>>[].obs;
   var isLoading = false.obs;
   var isCreating = false.obs;
   
@@ -62,5 +62,9 @@ class EventController extends GetxController {
       }
     });
   }
+  Future<void> loadEvents() async {
+    // TODO: implement when event repository is ready
+  }
+
   // ...existing methods...
 }

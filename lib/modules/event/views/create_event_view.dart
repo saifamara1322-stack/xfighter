@@ -7,5 +7,12 @@ class CreateEventView extends StatelessWidget {
   final EventController _eventController = Get.find<EventController>();
   
   CreateEventView({super.key});
-  // ...existing code...
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create Event')),
+      body: const Center(child: Text('Create event — coming soon')),
+    );
+  }
 }

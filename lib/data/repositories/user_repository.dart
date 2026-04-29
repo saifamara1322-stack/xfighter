@@ -1,116 +1,40 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:xfighter/data/repositories/api_client.dart';
+import 'package:xfighter/data/models/user_model.dart';
 
-class ApiClient {
-  final String baseUrl;
-  final Map<String, String> _headers;
-  
-  ApiClient({
-    this.baseUrl = 'https://your-api-domain.com/api',
-    Map<String, String>? customHeaders,
-  }) : _headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    ...?customHeaders,
-  };
-  
-  // Method to set auth token
-  void setAuthToken(String token) {
-    _headers['Authorization'] = 'Bearer $token';
-  }
-  
-  // GET request
-  Future<Map<String, dynamic>> get(
-    String endpoint, {
-    Map<String, dynamic>? queryParams,
-  }) async {
-    try {
-      final uri = Uri.parse('$baseUrl$endpoint').replace(queryParameters: queryParams);
-      final response = await http.get(uri, headers: _headers);
-      
-      return _handleResponse(response);
-    } catch (e) {
-      throw Exception('Network error: $e');
+class UserRepository {
+  final ApiClient _api = ApiClient();
+
+  Future<List<User>> getAllUsers() async {
+    final body = await _api.get('/users');
+    final data = body['data'];
+    if (data is List) {
+      return data
+          .map((e) => User.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
-  }
-  
-  // POST request
-  Future<Map<String, dynamic>> post(
-    String endpoint, {
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      final uri = Uri.parse('$baseUrl$endpoint');
-      final response = await http.post(
-        uri,
-        headers: _headers,
-        body: jsonEncode(data),
-      );
-      
-      return _handleResponse(response);
-    } catch (e) {
-      throw Exception('Network error: $e');
+    // Handle paged response
+    if (data is Map<String, dynamic> && data.containsKey('content')) {
+      return (data['content'] as List)
+          .map((e) => User.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
+    return [];
   }
-  
-  // PUT request
-  Future<Map<String, dynamic>> put(
-    String endpoint, {
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      final uri = Uri.parse('$baseUrl$endpoint');
-      final response = await http.put(
-        uri,
-        headers: _headers,
-        body: jsonEncode(data),
-      );
-      
-      return _handleResponse(response);
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
+
+  Future<User> getUserById(String id) async {
+    final body = await _api.get('/users/$id');
+    return User.fromJson(body['data'] as Map<String, dynamic>);
   }
-  
-  // PATCH request
-  Future<Map<String, dynamic>> patch(
-    String endpoint, {
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      final uri = Uri.parse('$baseUrl$endpoint');
-      final response = await http.patch(
-        uri,
-        headers: _headers,
-        body: jsonEncode(data),
-      );
-      
-      return _handleResponse(response);
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
-  }
-  
-  // DELETE request
-  Future<Map<String, dynamic>> delete(String endpoint) async {
-    try {
-      final uri = Uri.parse('$baseUrl$endpoint');
-      final response = await http.delete(uri, headers: _headers);
-      
-      return _handleResponse(response);
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
-  }
-  
-  // Handle response
-  Map<String, dynamic> _handleResponse(http.Response response) {
-    final Map<String, dynamic> responseData = jsonDecode(response.body);
-    
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return responseData;
-    } else {
-      throw Exception(responseData['message'] ?? 'Request failed with status: ${response.statusCode}');
-    }
-  }
+
+  // Legacy stubs kept so UserController still compiles
+  Future<List<User>> getUsers() => getAllUsers();
+
+  Future<User> addUser(User user) => Future.error(
+      'Direct user creation not supported. Use auth/register-* endpoints.');
+
+  Future<User> updateUser(User user) => Future.error(
+      'Direct user update not supported. Use role-specific update endpoints.');
+
+  Future<void> deleteUser(String userId) =>
+      Future.error('Direct user delete not supported by this API.');
 }

@@ -14,5 +14,12 @@ class FightCardBuilderView extends StatelessWidget {
     required this.eventId,
     required this.eventName,
   });
-  // ...existing code...
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Fight Card — $eventName')),
+      body: const Center(child: Text('Fight card builder — coming soon')),
+    );
+  }
 }

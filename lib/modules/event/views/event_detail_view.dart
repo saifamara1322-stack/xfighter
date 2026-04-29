@@ -12,5 +12,12 @@ class EventDetailView extends StatelessWidget {
   final RegistrationController _registrationController = Get.find<RegistrationController>();
   
   EventDetailView({super.key, required this.eventId});
-  // ...existing code...
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Event $eventId')),
+      body: const Center(child: Text('Event detail — coming soon')),
+    );
+  }
 }

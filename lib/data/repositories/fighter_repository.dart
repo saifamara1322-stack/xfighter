@@ -1,83 +1,58 @@
 import 'package:xfighter/data/repositories/api_client.dart';
 import 'package:xfighter/data/models/fighter_model.dart';
+import 'package:xfighter/data/models/coach_model.dart';
+import 'package:xfighter/data/models/club_model.dart';
 
 class FighterRepository {
-  final ApiClient _apiClient = ApiClient();
-  
-  Future<Fighter?> getFighterByUserId(String userId) async {
-    try {
-      final response = await _apiClient.get('fighters?userId=$userId');
-      if (response is List && response.isNotEmpty) {
-        return Fighter.fromJson(response[0]);
-      }
-      return null;
-    } catch (e) {
-      throw Exception('Failed to load fighter profile: $e');
-    }
+  final ApiClient _api = ApiClient();
+
+  // ── Profile ────────────────────────────────────────────────────────────────
+
+  Future<Fighter> getFighterProfile(String fighterId) async {
+    final body = await _api.get('/fighter/$fighterId');
+    return Fighter.fromJson(body['data'] as Map<String, dynamic>);
   }
-  
-  Future<Fighter> getFighterById(String id) async {
-    try {
-      final response = await _apiClient.get('fighters/$id');
-      return Fighter.fromJson(response);
-    } catch (e) {
-      throw Exception('Failed to load fighter: $e');
-    }
+
+  Future<Coach> getFighterCoach(String fighterId) async {
+    final body = await _api.get('/fighter/$fighterId/coach');
+    return Coach.fromJson(body['data'] as Map<String, dynamic>);
   }
-  
-  Future<Fighter> createFighter(Map<String, dynamic> fighterData) async {
-    try {
-      final newFighter = {
-        ...fighterData,
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'record': {
-          'wins': 0,
-          'losses': 0,
-          'draws': 0,
-          'knockouts': 0,
-          'submissions': 0,
-          'decisions': 0,
-        },
-        'verified': false,
-      };
-      
-      final response = await _apiClient.post('fighters', newFighter);
-      return Fighter.fromJson(response);
-    } catch (e) {
-      throw Exception('Failed to create fighter profile: $e');
-    }
+
+  Future<List<Club>> getFighterClubs(String fighterId) async {
+    final body = await _api.get('/fighter/$fighterId/clubs');
+    final data = body['data'] as List<dynamic>? ?? [];
+    return data.map((e) => Club.fromJson(e as Map<String, dynamic>)).toList();
   }
-  
-  Future<Fighter> updateFighter(String id, Map<String, dynamic> data) async {
-    try {
-      final response = await _apiClient.put('fighters/$id', data);
-      return Fighter.fromJson(response);
-    } catch (e) {
-      throw Exception('Failed to update fighter profile: $e');
-    }
+
+  // ── Club membership ────────────────────────────────────────────────────────
+
+  Future<void> requestJoinClub(String clubId) async {
+    await _api.post('/fighter/request-join-club/$clubId');
   }
-  
-  Future<List<Fighter>> getFightersByGym(String gym) async {
-    try {
-      final response = await _apiClient.get('fighters?gym=$gym');
-      if (response is List) {
-        return response.map((json) => Fighter.fromJson(json)).toList();
-      }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to load fighters: $e');
-    }
+
+  Future<void> respondToClubInvitation(
+      String membershipId, String action) async {
+    await _api.put('/fighter/respond-club-invitation/$membershipId',
+        data: {'action': action});
   }
-  
-  Future<List<Fighter>> getRankings(String weightClass) async {
-    try {
-      final response = await _apiClient.get('fighters?weightClass=$weightClass&_sort=record.wins&_order=desc');
-      if (response is List) {
-        return response.map((json) => Fighter.fromJson(json)).toList();
-      }
-      return [];
-    } catch (e) {
-      throw Exception('Failed to load rankings: $e');
-    }
+
+  Future<void> cancelClubRequest(String membershipId) async {
+    await _api.delete('/fighter/cancel-club-request/$membershipId');
+  }
+
+  // ── Coach relationship ─────────────────────────────────────────────────────
+
+  Future<void> requestCoach(String coachId) async {
+    await _api.post('/fighter/request-coach/$coachId');
+  }
+
+  Future<void> respondToCoachRequest(
+      String requestId, String action) async {
+    await _api.put('/fighter/respond-coach-request/$requestId',
+        data: {'action': action});
+  }
+
+  Future<void> cancelCoachRequest(String requestId) async {
+    await _api.delete('/fighter/cancel-coach-request/$requestId');
   }
 }
