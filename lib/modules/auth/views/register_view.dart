@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
+import 'package:xfighter/modules/fighter/controllers/fighter_controller.dart';
+import 'package:xfighter/modules/registration/controllers/registration_controller.dart';
+import 'package:xfighter/data/models/country_model.dart';
 
 class RegisterView extends StatelessWidget {
   const RegisterView({super.key});
@@ -10,7 +13,8 @@ class RegisterView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthController c = Get.find<AuthController>();
+    final AuthController c = Get.put(AuthController());
+    final RegistrationController regController = Get.put(RegistrationController());
 
     return Scaffold(
       backgroundColor: _bg,
@@ -130,8 +134,8 @@ class RegisterView extends StatelessWidget {
                         keyboardType: TextInputType.phone,
                       ),
                       const SizedBox(height: 16),
-                      // Country picker
-                      Obx(() => _CountryDropdown(controller: c)),
+                      // Country dropdown with API integration
+                      _CountryDropdown(controller: c, regController: regController),
                       const SizedBox(height: 16),
                       Obx(() => _Field(
                             controller: c.passwordController,
@@ -355,77 +359,283 @@ class _RefereeFields extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Country dropdown
+// Country Dropdown with API integration (following the same pattern)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CountryDropdown extends StatelessWidget {
   final AuthController controller;
-  const _CountryDropdown({required this.controller});
+  final RegistrationController regController;
+  const _CountryDropdown({required this.controller, required this.regController});
 
   static const _red = Color(0xFFE31837);
 
   @override
   Widget build(BuildContext context) {
-    if (controller.countries.isEmpty) {
+    return Obx(() {
+      // Show loading state
+      if (regController.isLoadingCountries.value && regController.countries.isEmpty) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.15)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              const Icon(Icons.flag_outlined, color: _red, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'COUNTRY',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Loading countries...',
+                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // Show error state
+      if (regController.hasCountriesError.value) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red.withOpacity(0.5)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.red, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Failed to load countries',
+                      style: TextStyle(color: Colors.red.shade300, fontSize: 14),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => regController.refreshCountries(),
+                    child: const Text('Retry', style: TextStyle(color: _red)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }
+
+      // Show empty state
+      if (regController.countries.isEmpty) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.15)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              const Icon(Icons.flag_outlined, color: _red, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'COUNTRY',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'No countries available',
+                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh, size: 20, color: _red),
+                onPressed: () => regController.refreshCountries(),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // Show dropdown with countries from API
       return Container(
-        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.3),
           borderRadius: BorderRadius.circular(12),
-          border:
-              Border.all(color: Colors.white.withOpacity(0.15)),
+          border: Border.all(color: Colors.white.withOpacity(0.15)),
         ),
-        child: Row(
-          children: [
-            const Icon(Icons.flag_outlined, color: _red, size: 20),
-            const SizedBox(width: 12),
-            Text(
-              'Loading countries…',
-              style: TextStyle(color: Colors.white.withOpacity(0.4)),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<Country>(
+            isExpanded: true,
+            value: regController.selectedCountry.value,
+            hint: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  const Icon(Icons.flag_outlined, color: _red, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'COUNTRY',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Select your country',
+                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+            items: regController.countries.map((country) {
+              return DropdownMenuItem<Country>(
+                value: country,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      // Country Flag
+                      if (country.flagUrl != null && 
+                          country.flagUrl!.isNotEmpty && 
+                          country.flagUrl != 'string')
+                        _buildFlagImage(country.flagUrl!),
+                      if (country.flagUrl != null && 
+                          country.flagUrl!.isNotEmpty && 
+                          country.flagUrl != 'string')
+                        const SizedBox(width: 12),
+                      
+                      // Country Name
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              country.name,
+                              style: const TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                            Text(
+                              'Code: ${country.code}',
+                              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Selected indicator
+                      if (regController.selectedCountry.value?.id == country.id)
+                        const Icon(Icons.check_circle, color: _red, size: 20),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (Country? country) {
+              if (country != null) {
+                regController.setSelectedCountry(country);
+                controller.selectedCountryId.value = country.id; // Store UUID in auth controller
+                print('Selected country: ${country.name} (ID: ${country.id})');
+              }
+            },
+            dropdownColor: Colors.grey[900],
+            style: const TextStyle(color: Colors.white),
+            icon: Icon(Icons.arrow_drop_down, color: Colors.white.withOpacity(0.7)),
+          ),
         ),
       );
-    }
+    });
+  }
 
-    return DropdownButtonFormField<String>(
-      initialValue: controller.selectedCountryId.value.isNotEmpty
-          ? controller.selectedCountryId.value
-          : null,
-      dropdownColor: const Color(0xFF1A1A1A),
-      style: const TextStyle(color: Colors.white),
-      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white54),
-      decoration: InputDecoration(
-        labelText: 'COUNTRY',
-        labelStyle: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1),
-        prefixIcon: const Icon(Icons.flag_outlined, color: _red, size: 20),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: Colors.white.withOpacity(0.15)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _red, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.black.withOpacity(0.3),
+  Widget _buildFlagImage(String flagUrl) {
+    return Container(
+      width: 40,
+      height: 30,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
-      hint: Text('Select your country',
-          style: TextStyle(color: Colors.white.withOpacity(0.3))),
-      items: controller.countries
-          .map((country) => DropdownMenuItem(
-                value: country.id,
-                child: Text('${country.flagUrl != null ? "" : "🌐"} ${country.name}'),
-              ))
-          .toList(),
-      onChanged: (val) {
-        if (val != null) controller.selectedCountryId.value = val;
-      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.network(
+          flagUrl,
+          width: 40,
+          height: 30,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey.shade800,
+              child: const Icon(
+                Icons.flag,
+                size: 20,
+                color: Colors.white54,
+              ),
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              color: Colors.grey.shade800,
+              child: const Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

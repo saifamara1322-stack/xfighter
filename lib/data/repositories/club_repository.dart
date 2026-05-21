@@ -59,7 +59,7 @@ class ClubRepository {
 
   Future<Club> updateClubLogo(String clubId, String logoUrl) async {
     final body = await _api.put('/club/$clubId/logo',
-        data: {'logoUrl': logoUrl});
+        queryParams: {'logoUrl': logoUrl});
     return Club.fromJson(body['data'] as Map<String, dynamic>);
   }
 

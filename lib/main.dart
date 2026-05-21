@@ -3,12 +3,15 @@ import 'package:get/get.dart';
 import 'package:xfighter/core/theme/app_theme.dart';
 import 'package:xfighter/core/routes/app_router.dart';
 import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
+import 'package:xfighter/modules/fighter/controllers/fighter_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Global controllers (available for the entire app lifetime)
   Get.put(AuthController(), permanent: true);
+  Get.put(FighterController(), permanent: true); // Ensure fighter controller is available for country fetching
+
 
   runApp(const XFighterApp());
 }

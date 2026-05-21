@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/registration_controller.dart';
 import '../../../data/models/enhanced_event_registration.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/country_model.dart';
 
 class FighterRegistrationsView extends StatelessWidget {
   FighterRegistrationsView({super.key});
@@ -50,7 +51,10 @@ class FighterRegistrationsView extends StatelessWidget {
       }
       
       return RefreshIndicator(
-        onRefresh: () => _controller.loadFighterRegistrations(),
+        onRefresh: () async {
+          await _controller.loadFighterRegistrations();
+          await _controller.refreshCountries();
+        },
         child: ListView.builder(
           padding: const EdgeInsets.all(8),
           itemCount: _controller.fighterRegistrations.length,
@@ -123,6 +127,12 @@ class FighterRegistrationCard extends StatelessWidget {
                 _buildInfoRow('Weight Class:', registration.weightClass),
                 
                 const SizedBox(height: 16),
+                
+                // Country Selection Section
+                _buildCountrySection(),
+                
+                const SizedBox(height: 16),
+                
                 // Action Buttons
                 Row(
                   children: [
@@ -154,6 +164,235 @@ class FighterRegistrationCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildCountrySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Fighter Country',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        
+        // Show loading state
+        if (controller.isLoadingCountries.value) 
+          _buildLoadingCountryWidget(),
+        
+        // Show error state
+        if (controller.hasCountriesError.value)
+          _buildErrorCountryWidget(),
+        
+        // Show country dropdown when countries are loaded
+        if (!controller.isLoadingCountries.value && 
+            !controller.hasCountriesError.value &&
+            controller.countries.isNotEmpty)
+          _buildCountryDropdown(),
+        
+        // Show empty state
+        if (!controller.isLoadingCountries.value && 
+            !controller.hasCountriesError.value &&
+            controller.countries.isEmpty)
+          _buildEmptyCountryWidget(),
+      ],
+    );
+  }
+  
+  Widget _buildCountryDropdown() {
+    return Obx(() {
+      // Find the currently selected country (if any)
+      Country? currentSelectedCountry;
+      if (controller.selectedCountry.value != null) {
+        currentSelectedCountry = controller.selectedCountry.value;
+      }
+      
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<Country>(
+            isExpanded: true,
+            hint: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Select fighter\'s country',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
+            ),
+            value: currentSelectedCountry,
+            items: controller.countries.map((country) {
+              return DropdownMenuItem<Country>(
+                value: country,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      // Country Flag
+                      if (country.flagUrl != null && 
+                          country.flagUrl!.isNotEmpty && 
+                          country.flagUrl != 'string')
+                        _buildFlagImage(country.flagUrl!),
+                      if (country.flagUrl != null && 
+                          country.flagUrl!.isNotEmpty && 
+                          country.flagUrl != 'string')
+                        const SizedBox(width: 12),
+                      
+                      // Country Name
+                      Expanded(
+                        child: Text(
+                          country.name,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                      
+                      // Country Code
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          country.code,
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (Country? country) {
+              controller.setSelectedCountry(country);
+              _showSnackbar('Country Selected', '${country?.name} selected for fighter');
+            },
+          ),
+        ),
+      );
+    });
+  }
+  
+  Widget _buildFlagImage(String flagUrl) {
+    return Container(
+      width: 30,
+      height: 20,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.network(
+          flagUrl,
+          width: 30,
+          height: 20,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey.shade200,
+              child: const Icon(
+                Icons.flag,
+                size: 16,
+                color: Colors.grey,
+              ),
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              color: Colors.grey.shade200,
+              child: const Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildLoadingCountryWidget() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Row(
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 12),
+          Text('Loading countries...'),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildErrorCountryWidget() {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.red),
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.red.shade50,
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.red),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  controller.countriesErrorMessage.value,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+              TextButton(
+                onPressed: () => controller.refreshCountries(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildEmptyCountryWidget() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.grey.shade50,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('No countries available'),
+          TextButton(
+            onPressed: () => controller.refreshCountries(),
+            child: const Text('Refresh'),
           ),
         ],
       ),
@@ -266,5 +505,22 @@ class FighterRegistrationCard extends StatelessWidget {
         ],
       ),
     );
+  }
+  
+  void _showSnackbar(String title, String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.context != null) {
+        Get.snackbar(
+          title,
+          message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+          margin: const EdgeInsets.all(10),
+          borderRadius: 10,
+        );
+      }
+    });
   }
 }

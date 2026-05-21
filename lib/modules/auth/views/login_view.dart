@@ -153,159 +153,242 @@ class LoginView extends StatelessWidget {
                               padding: const EdgeInsets.all(28.0),
                               child: Column(
                                 children: [
+                                  // Slogan Container
                                   Container(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          const Color(0xFFE31837).withOpacity(0.15),
-                                          const Color(0xFFB8102E).withOpacity(0.05),
+                                          const Color(0xFFE31837).withOpacity(0.2),
+                                          const Color(0xFFB8102E).withOpacity(0.1),
                                         ],
                                       ),
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(30),
                                       border: Border.all(
                                         color: const Color(0xFFE31837).withOpacity(0.3),
+                                        width: 1,
                                       ),
                                     ),
-                                    child: Column(
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.verified,
-                                              size: 16,
-                                              color: Color(0xFFE31837),
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'DEMO ACCOUNTS',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 11,
-                                                color: Colors.white70,
-                                                letterSpacing: 1,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 12),
-                                        _buildDemoAccountRow('🥊 FIGHTER', 'mohamed.fighter@example.com'),
-                                        const SizedBox(height: 8),
-                                        _buildDemoAccountRow('🎯 COACH', 'nour.coach@example.com'),
-                                        const SizedBox(height: 8),
-                                        _buildDemoAccountRow('📋 ORGANIZER', 'youssef.organizer@example.com'),
-                                        const SizedBox(height: 8),
-                                        _buildDemoAccountRow('🛡️ REFEREE', 'sirine.ref@example.com'),
-                                        const SizedBox(height: 8),
-                                        _buildDemoAccountRow('👑 ADMIN', 'admin@example.com'),
-                                        const SizedBox(height: 12),
                                         Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withOpacity(0.3),
-                                            borderRadius: BorderRadius.circular(8),
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFE31837),
+                                            shape: BoxShape.circle,
                                           ),
-                                          child: const Text(
-                                            '🔓 Any password works for demo',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.white54,
-                                            ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Text(
+                                          'TRAIN. FIGHT. CONQUER.',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            letterSpacing: 2,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFE31837),
+                                            shape: BoxShape.circle,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
                                   
-                                  const SizedBox(height: 28),
+                                  const SizedBox(height: 24),
                                   
-                                  TextField(
-                                    controller: authController.emailController,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      labelText: 'EMAIL ADDRESS',
-                                      labelStyle: const TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 1,
-                                      ),
-                                      hintText: 'Enter your email',
-                                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                                      prefixIcon: const Icon(
-                                        Icons.email_outlined,
-                                        color: Color(0xFFE31837),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: Colors.white.withOpacity(0.15),
+                                  // Email field with validation
+                                  Obx(() => Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      TextField(
+                                        controller: authController.emailController,
+                                        style: const TextStyle(color: Colors.white),
+                                        textInputAction: TextInputAction.next,
+                                        keyboardType: TextInputType.emailAddress,
+                                        onSubmitted: (_) {
+                                          FocusScope.of(context).nextFocus();
+                                        },
+                                        decoration: InputDecoration(
+                                          labelText: 'EMAIL ADDRESS',
+                                          labelStyle: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 1,
+                                          ),
+                                          hintText: 'Enter your email',
+                                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                                          prefixIcon: const Icon(
+                                            Icons.email_outlined,
+                                            color: Color(0xFFE31837),
+                                          ),
+                                          errorText: authController.emailError.value.isNotEmpty 
+                                              ? authController.emailError.value 
+                                              : null,
+                                          errorStyle: const TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFFE31837),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                              color: Colors.white.withOpacity(0.15),
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                              color: Color(0xFFE31837),
+                                              width: 2,
+                                            ),
+                                          ),
+                                          errorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                              color: Color(0xFFE31837),
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                          focusedErrorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                              color: Color(0xFFE31837),
+                                              width: 2,
+                                            ),
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.black.withOpacity(0.3),
                                         ),
                                       ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFE31837),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.black.withOpacity(0.3),
-                                    ),
-                                    keyboardType: TextInputType.emailAddress,
-                                  ),
+                                    ],
+                                  )),
                                   
                                   const SizedBox(height: 20),
                                   
-                                  Obx(() => TextField(
-                                    controller: authController.passwordController,
-                                    obscureText: authController.obscurePassword.value,
-                                    style: const TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      labelText: 'PASSWORD',
-                                      labelStyle: const TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 1,
-                                      ),
-                                      hintText: 'Enter your password',
-                                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                                      prefixIcon: const Icon(
-                                        Icons.lock_outline,
-                                        color: Color(0xFFE31837),
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          authController.obscurePassword.value
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: Colors.white54,
+                                  // Password field with validation
+                                  Obx(() => Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      TextField(
+                                        controller: authController.passwordController,
+                                        obscureText: authController.obscurePassword.value,
+                                        style: const TextStyle(color: Colors.white),
+                                        textInputAction: TextInputAction.done,
+                                        onSubmitted: (_) {
+                                          if (!authController.isLoading.value) {
+                                            _validateAndLogin(authController);
+                                          }
+                                        },
+                                        decoration: InputDecoration(
+                                          labelText: 'PASSWORD',
+                                          labelStyle: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 1,
+                                          ),
+                                          hintText: 'Enter your password',
+                                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                                          prefixIcon: const Icon(
+                                            Icons.lock_outline,
+                                            color: Color(0xFFE31837),
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              authController.obscurePassword.value
+                                                  ? Icons.visibility_off
+                                                  : Icons.visibility,
+                                              color: Colors.white54,
+                                            ),
+                                            onPressed: authController.togglePasswordVisibility,
+                                          ),
+                                          errorText: authController.passwordError.value.isNotEmpty 
+                                              ? authController.passwordError.value 
+                                              : null,
+                                          errorStyle: const TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFFE31837),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: BorderSide(
+                                              color: Colors.white.withOpacity(0.15),
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                              color: Color(0xFFE31837),
+                                              width: 2,
+                                            ),
+                                          ),
+                                          errorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                              color: Color(0xFFE31837),
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                          focusedErrorBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: const BorderSide(
+                                              color: Color(0xFFE31837),
+                                              width: 2,
+                                            ),
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.black.withOpacity(0.3),
                                         ),
-                                        onPressed: authController.togglePasswordVisibility,
                                       ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: Colors.white.withOpacity(0.15),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFE31837),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.black.withOpacity(0.3),
-                                    ),
+                                    ],
                                   )),
                                   
                                   const SizedBox(height: 32),
+                                  
+                                  // Error message display
+                                  Obx(() => authController.errorMessage.value.isNotEmpty
+                                      ? Container(
+                                          margin: const EdgeInsets.only(bottom: 16),
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFE31837).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: const Color(0xFFE31837).withOpacity(0.3),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.error_outline,
+                                                color: Color(0xFFE31837),
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  authController.errorMessage.value,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFFE31837),
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : const SizedBox.shrink()),
                                   
                                   Obx(() => SizedBox(
                                     width: double.infinity,
@@ -313,7 +396,7 @@ class LoginView extends StatelessWidget {
                                     child: ElevatedButton(
                                       onPressed: authController.isLoading.value
                                           ? null
-                                          : authController.login,
+                                          : () => _validateAndLogin(authController),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: const Color(0xFFE31837),
                                         foregroundColor: Colors.white,
@@ -384,6 +467,8 @@ class LoginView extends StatelessWidget {
                                   
                                   TextButton(
                                     onPressed: () {
+                                      // Clear errors when navigating
+                                      authController.clearErrors();
                                       Get.toNamed('/register');
                                     },
                                     style: TextButton.styleFrom(
@@ -426,39 +511,41 @@ class LoginView extends StatelessWidget {
     );
   }
   
-  Widget _buildDemoAccountRow(String role, String email) {
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 4,
-          decoration: const BoxDecoration(
-            color: Color(0xFFE31837),
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          role,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.white70,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            email,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.white.withOpacity(0.5),
-              fontFamily: 'monospace',
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
+  // Validation and login method
+  void _validateAndLogin(AuthController authController) {
+    // Clear previous errors
+    authController.clearErrors();
+    
+    // Validate email
+    final email = authController.emailController.text.trim();
+    if (email.isEmpty) {
+      authController.setEmailError('Email is required');
+      return;
+    }
+    if (!_isValidEmail(email)) {
+      authController.setEmailError('Please enter a valid email address');
+      return;
+    }
+    
+    // Validate password
+    final password = authController.passwordController.text;
+    if (password.isEmpty) {
+      authController.setPasswordError('Password is required');
+      return;
+    }
+    if (password.length < 6) {
+      authController.setPasswordError('Password must be at least 6 characters');
+      return;
+    }
+    
+    // If validation passes, proceed with login
+    authController.login();
+  }
+  
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
+    return emailRegex.hasMatch(email);
   }
 }

@@ -7,6 +7,7 @@ class CountryRepository {
   Future<List<Country>> getAllCountries() async {
     final body = await _api.get('/countries');
     final data = body['data'] as List<dynamic>? ?? [];
+    print('Fetched ${data.length} countries from API');
     return data
         .map((e) => Country.fromJson(e as Map<String, dynamic>))
         .toList();

@@ -19,6 +19,11 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
   var countries = <Country>[].obs;
   var selectedCountryId = RxString('');
 
+  // Validation error observables
+  var emailError = ''.obs;
+  var passwordError = ''.obs;
+  var errorMessage = ''.obs;
+
   // Registration role selector (tab index: 0=Fighter, 1=Referee)
   var registerRoleIndex = 0.obs;
   RegisterRole get registerRole =>
@@ -86,26 +91,84 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
+  // ── Validation Methods ─────────────────────────────────────────────────────
+  bool validateEmail(String email) {
+    if (email.isEmpty) {
+      emailError.value = 'Email is required';
+      return false;
+    }
+    
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    if (!emailRegex.hasMatch(email)) {
+      emailError.value = 'Please enter a valid email address';
+      return false;
+    }
+    
+    emailError.value = '';
+    return true;
+  }
+
+  bool validatePassword(String password) {
+    if (password.isEmpty) {
+      passwordError.value = 'Password is required';
+      return false;
+    }
+    
+    if (password.length < 6) {
+      passwordError.value = 'Password must be at least 6 characters';
+      return false;
+    }
+    
+    passwordError.value = '';
+    return true;
+  }
+
+  void clearErrors() {
+    emailError.value = '';
+    passwordError.value = '';
+    errorMessage.value = '';
+  }
+
+  void setEmailError(String error) {
+    emailError.value = error;
+  }
+
+  void setPasswordError(String error) {
+    passwordError.value = error;
+  }
+
   // ── Login ──────────────────────────────────────────────────────────────────
   Future<void> login() async {
-    if (!_validateLoginForm()) return;
+    // Clear previous errors
+    clearErrors();
+    
+    // Validate form
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    
+    if (!validateEmail(email) || !validatePassword(password)) {
+      return;
+    }
 
     isLoading.value = true;
     try {
-      await _authRepository.login(
-        emailController.text.trim(),
-        passwordController.text,
-      );
+      await _authRepository.login(email, password);
       final user = await _authRepository.getCurrentUser();
       await _authRepository.cacheUser(user);
       currentUser.value = user;
       isLoggedIn.value = true;
       emailController.clear();
       passwordController.clear();
+      
+      // Clear any lingering errors
+      clearErrors();
 
       _showSnackbar('Succès', 'Bienvenue ${user.fullName}!');
       Get.offAllNamed('/dashboard');
     } catch (e) {
+      errorMessage.value = e.toString();
       _showSnackbar('Erreur', e.toString(), backgroundColor: Colors.red);
     } finally {
       isLoading.value = false;
@@ -114,6 +177,9 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
 
   // ── Registration ───────────────────────────────────────────────────────────
   Future<void> register() async {
+    // Clear previous errors
+    clearErrors();
+    
     if (!_validateRegisterForm()) return;
 
     isLoading.value = true;
@@ -130,6 +196,7 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
       _clearRegisterForm();
       Get.offAllNamed('/login');
     } catch (e) {
+      errorMessage.value = e.toString();
       _showSnackbar('Erreur', e.toString(), backgroundColor: Colors.red);
     } finally {
       isLoading.value = false;
@@ -177,6 +244,7 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
       currentUser.value = null;
       isLoggedIn.value = false;
       isLoading.value = false;
+      clearErrors(); // Clear errors on logout
       Get.offAllNamed('/login');
     }
   }
@@ -212,11 +280,13 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
 
   bool _validateRegisterForm() {
     if (emailController.text.trim().isEmpty) {
+      emailError.value = 'Veuillez entrer votre email';
       _showSnackbar('Erreur', 'Veuillez entrer votre email',
           backgroundColor: Colors.red);
       return false;
     }
     if (passwordController.text.length < 6) {
+      passwordError.value = 'Le mot de passe doit contenir au moins 6 caractères';
       _showSnackbar('Erreur', 'Le mot de passe doit contenir au moins 6 caractères',
           backgroundColor: Colors.red);
       return false;
@@ -231,6 +301,9 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
           backgroundColor: Colors.red);
       return false;
     }
+    
+    // Clear errors if validation passes
+    clearErrors();
     return true;
   }
 
@@ -245,6 +318,7 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
     gradeController.clear();
     selectedCountryId.value = '';
     registerTabController.index = 0;
+    clearErrors(); // Clear errors when clearing form
   }
 
   void _showSnackbar(String title, String message,

@@ -161,11 +161,19 @@ class DashboardView extends StatelessWidget {
             () { Get.back(); Get.toNamed(AppRouter.gyms); }),
         _item(Icons.assignment_turned_in, 'FIGHT CARDS',
             () { Get.back(); Get.toNamed(AppRouter.fightCards); }),
+        _item(Icons.manage_accounts, 'MY PROFILE',
+            () { Get.back(); Get.toNamed(AppRouter.organizerManagement); }),
       ]);
 
   Widget _buildAdminMenu() => Column(children: [
         _item(Icons.people, 'ALL USERS',
             () { Get.back(); Get.toNamed(AppRouter.users); }),
+        _item(Icons.admin_panel_settings, 'MANAGE ADMINS',
+            () { Get.back(); Get.toNamed(AppRouter.adminManagement); }),
+        _item(Icons.manage_accounts, 'MANAGE ORGANIZERS',
+            () { Get.back(); Get.toNamed(AppRouter.organizerManagement); }),
+        _item(Icons.verified_user, 'VERIFICATION',
+            () { Get.back(); Get.toNamed(AppRouter.verification); }),
         _item(Icons.event, 'MANAGE EVENTS',
             () { Get.back(); Get.toNamed(AppRouter.adminEvents); }),
         _item(Icons.business, 'MANAGE GYMS',
@@ -342,9 +350,9 @@ class DashboardView extends StatelessWidget {
     } else if (controller.isCoach()) {
       Get.toNamed(AppRouter.coachProfile);
     } else if (controller.isOrganizer()) {
-      Get.toNamed(AppRouter.organizerProfile);
+      Get.toNamed(AppRouter.organizerManagement);
     } else if (controller.isAdmin()) {
-      Get.toNamed(AppRouter.adminProfile);
+      Get.toNamed(AppRouter.adminManagement);
     }
   }
 }

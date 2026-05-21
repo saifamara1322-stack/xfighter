@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/repositories/registration_repository.dart';
+import '../../../data/repositories/country_repository.dart';
 import '../../../data/models/event_model.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/country_model.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../fighter/controllers/fighter_controller.dart';
 
 class RegistrationController extends GetxController {
   final RegistrationRepository _registrationRepository = RegistrationRepository();
+  final CountryRepository _countryRepository = CountryRepository();
   final AuthController _authController = Get.find<AuthController>();
   final FighterController _fighterController = Get.find<FighterController>();
   
@@ -16,6 +19,18 @@ class RegistrationController extends GetxController {
   var coachRegistrations = <EnhancedEventRegistration>[].obs;
   var pendingCoachRegistrations = <EnhancedEventRegistration>[].obs;
   var eventRegistrations = <EnhancedEventRegistration>[].obs;
+  
+  // Country related observables
+  var countries = <Country>[].obs;
+  var isLoadingCountries = false.obs;
+  var hasCountriesError = false.obs;
+  var countriesErrorMessage = ''.obs;
+  var selectedCountry = Rxn<Country>();
+  
+  // Registration form data
+  var selectedCountryId = ''.obs;
+  var selectedCategory = ''.obs;
+  var weightInKg = 0.0.obs;
   
   // UI states
   var isLoading = false.obs;
@@ -39,6 +54,253 @@ class RegistrationController extends GetxController {
   void onInit() {
     super.onInit();
     loadUserRegistrations();
+    loadCountries(); // Load countries when controller initializes
+  }
+  
+  // Load countries from API
+  Future<void> loadCountries() async {
+    try {
+      isLoadingCountries.value = true;
+      hasCountriesError.value = false;
+      countriesErrorMessage.value = '';
+      
+      final fetchedCountries = await _countryRepository.getAllCountries();
+      countries.value = fetchedCountries;
+      
+      // Sort alphabetically by name
+      countries.sort((a, b) => a.name.compareTo(b.name));
+      
+      print('✅ Loaded ${countries.length} countries successfully');
+    } catch (e) {
+      hasCountriesError.value = true;
+      countriesErrorMessage.value = e.toString();
+      print('❌ Error loading countries: $e');
+      _showSnackbar('Error', 'Failed to load countries: ${e.toString()}', backgroundColor: Colors.red);
+    } finally {
+      isLoadingCountries.value = false;
+    }
+  }
+  
+  // Get country by ID
+  Country? getCountryById(String id) {
+    try {
+      return countries.firstWhereOrNull((country) => country.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // Get country by code
+  Country? getCountryByCode(String code) {
+    try {
+      return countries.firstWhereOrNull((country) => country.code == code);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // Get country by name
+  Country? getCountryByName(String name) {
+    try {
+      return countries.firstWhereOrNull((country) => country.name == name);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // Set selected country
+  void setSelectedCountry(Country? country) {
+    selectedCountry.value = country;
+    if (country != null) {
+      selectedCountryId.value = country.id; // Store the UUID
+      print('Selected country ID: ${country.id} (UUID format)');
+    } else {
+      selectedCountryId.value = '';
+    }
+  }
+  
+  // Set selected country by ID
+  void setSelectedCountryById(String id) {
+    final country = getCountryById(id);
+    selectedCountry.value = country;
+    if (country != null) {
+      selectedCountryId.value = country.id;
+    }
+  }
+  
+  // Set selected country by code
+  void setSelectedCountryByCode(String code) {
+    final country = getCountryByCode(code);
+    selectedCountry.value = country;
+    if (country != null) {
+      selectedCountryId.value = country.id;
+    }
+  }
+  
+  // Get selected country info
+  String getSelectedCountryName() {
+    return selectedCountry.value?.name ?? '';
+  }
+  
+  String getSelectedCountryCode() {
+    return selectedCountry.value?.code ?? '';
+  }
+  
+  String getSelectedCountryId() {
+    return selectedCountryId.value;
+  }
+  
+  String? getSelectedCountryFlagUrl() {
+    return selectedCountry.value?.flagUrl;
+  }
+  
+  void clearSelectedCountry() {
+    selectedCountry.value = null;
+    selectedCountryId.value = '';
+  }
+  
+  // Set category
+  void setCategory(String category) {
+    selectedCategory.value = category;
+  }
+  
+  // Set weight
+  void setWeight(double weight) {
+    weightInKg.value = weight;
+  }
+  
+  // Search countries
+  List<Country> searchCountries(String query) {
+    if (query.isEmpty) return countries;
+    return countries.where((country) {
+      return country.name.toLowerCase().contains(query.toLowerCase()) ||
+             country.code.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+  }
+  
+  // Refresh countries
+  Future<void> refreshCountries() async {
+    await loadCountries();
+  }
+  
+  // Get countries count
+  int getCountriesCount() {
+    return countries.length;
+  }
+  
+  // Check if countries are loaded
+  bool get areCountriesLoaded {
+    return !isLoadingCountries.value && countries.isNotEmpty;
+  }
+  
+  // Register fighter with proper API format
+  Future<bool> registerFighterWithCountry({
+    required String email,
+    required String password,
+    required String fullName,
+    required String phoneNumber,
+    required String category,
+    required double weight,
+    String? countryId, // This should be a valid UUID
+  }) async {
+    try {
+      isLoading.value = true;
+      
+      // Validate country ID is a valid UUID format (36 characters)
+      if (countryId != null && countryId.isNotEmpty) {
+        // Basic UUID validation (check if it matches UUID pattern)
+        final uuidRegex = RegExp(
+          r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+          caseSensitive: false,
+        );
+        
+        if (!uuidRegex.hasMatch(countryId)) {
+          throw Exception('Invalid country ID format. Must be a valid UUID (e.g., 3fa85f64-5717-4562-b3fc-2c963f66afa6)');
+        }
+      }
+      
+      // Prepare the registration data exactly as the API expects
+      final registrationData = {
+        'email': email,
+        'password': password,
+        'fullName': fullName,
+        'phoneNumber': phoneNumber,
+        'countryId': countryId, // This must be a valid UUID or null
+        'category': category,
+        'weight': weight,
+      };
+      
+      print('📝 Registering fighter with data: $registrationData');
+      
+      // Call the API through your repository
+      final result = await _registrationRepository.registerFighter(registrationData);
+      
+      if (result) {
+        _showSnackbar('Success', 'Fighter registered successfully', backgroundColor: Colors.green);
+        return true;
+      } else {
+        throw Exception('Registration failed');
+      }
+    } catch (e) {
+      _showSnackbar('Error', 'Failed to register: ${e.toString()}', backgroundColor: Colors.red);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  // Register fighter for an event (existing method)
+  Future<bool> registerForEvent({
+    required String eventId,
+    required String weightClass,
+    String? notes,
+    String? countryId, // Add countryId parameter - must be UUID
+  }) async {
+    try {
+      isLoading.value = true;
+      
+      final currentUser = _authController.currentUser.value;
+      if (currentUser == null || currentUser.role != UserRole.FIGHTER) {
+        throw Exception('Only fighters can register for events');
+      }
+      
+      // Check eligibility
+      final isEligible = await checkEligibility(eventId);
+      if (!isEligible) {
+        return false;
+      }
+      
+      // Get fighter's current profile
+      final fighterProfile = _fighterController.currentFighter.value;
+      final coachId = fighterProfile?.coach?.id;
+      
+      final registration = EnhancedEventRegistration(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        eventId: eventId,
+        fighterId: currentUser.id,
+        status: RegistrationStatus.pending,
+        weightClass: weightClass,
+        registeredAt: DateTime.now(),
+        coachId: coachId,
+        notes: notes,
+      );
+      
+      final result = await _registrationRepository.registerForEvent(registration);
+      
+      if (result) {
+        await loadFighterRegistrations();
+        _updateCounts();
+        _showSnackbar('Success', 'Registration submitted successfully', backgroundColor: Colors.green);
+        return true;
+      } else {
+        throw Exception('Registration failed');
+      }
+    } catch (e) {
+      _showSnackbar('Error', 'Failed to register: ${e.toString()}', backgroundColor: Colors.red);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
   }
   
   // Load all registrations for the current user based on role
@@ -204,59 +466,6 @@ class RegistrationController extends GetxController {
       }
     } catch (e) {
       _showSnackbar('Error', 'Failed to update status: ${e.toString()}', backgroundColor: Colors.red);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-  
-  // Register fighter for an event
-  Future<bool> registerForEvent({
-    required String eventId,
-    required String weightClass,
-    String? notes,
-  }) async {
-    try {
-      isLoading.value = true;
-      
-      final currentUser = _authController.currentUser.value;
-      if (currentUser == null || currentUser.role != UserRole.FIGHTER) {
-        throw Exception('Only fighters can register for events');
-      }
-      
-      // Check eligibility
-      final isEligible = await checkEligibility(eventId);
-      if (!isEligible) {
-        return false;
-      }
-      
-      // Get fighter's current profile
-      final fighterProfile = _fighterController.currentFighter.value;
-      final coachId = fighterProfile?.coach?.id;
-      
-      final registration = EnhancedEventRegistration(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        eventId: eventId,
-        fighterId: currentUser.id,
-        status: RegistrationStatus.pending,
-        weightClass: weightClass,
-        registeredAt: DateTime.now(),
-        coachId: coachId,
-        notes: notes,
-      );
-      
-      final result = await _registrationRepository.registerForEvent(registration);
-      
-      if (result) {
-        await loadFighterRegistrations();
-        _updateCounts();
-        _showSnackbar('Success', 'Registration submitted successfully', backgroundColor: Colors.green);
-        return true;
-      } else {
-        throw Exception('Registration failed');
-      }
-    } catch (e) {
-      _showSnackbar('Error', 'Failed to register: ${e.toString()}', backgroundColor: Colors.red);
-      return false;
     } finally {
       isLoading.value = false;
     }
@@ -564,6 +773,7 @@ class RegistrationController extends GetxController {
   // Refresh all data
   Future<void> refreshData() async {
     await loadUserRegistrations();
+    await loadCountries(); // Also refresh countries
     if (_authController.currentUser.value?.role == UserRole.FIGHTER) {
       final userId = _authController.currentUser.value?.id;
       if (userId != null) {
@@ -605,4 +815,3 @@ class RegistrationController extends GetxController {
   }
 }
 
-// EligibilityCheck is defined in registration_repository.dart

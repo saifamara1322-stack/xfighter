@@ -40,6 +40,20 @@ import 'package:xfighter/modules/registration/bindings/registration_binding.dart
 import 'package:xfighter/modules/matchmaking/views/fight_card_builder_view.dart';
 import 'package:xfighter/modules/matchmaking/controllers/matchmaking_controller.dart';
 
+// ── Admin ─────────────────────────────────────────────────────────────────────
+import 'package:xfighter/modules/admin/views/admin_list_view.dart';
+import 'package:xfighter/modules/admin/views/admin_detail_view.dart';
+import 'package:xfighter/modules/admin/bindings/admin_binding.dart';
+
+// ── Organizer ─────────────────────────────────────────────────────────────────
+import 'package:xfighter/modules/organizer/views/organizer_list_view.dart';
+import 'package:xfighter/modules/organizer/views/organizer_detail_view.dart';
+import 'package:xfighter/modules/organizer/bindings/organizer_binding.dart';
+
+// ── Verification ──────────────────────────────────────────────────────────────
+import 'package:xfighter/modules/verification/views/verification_list_view.dart';
+import 'package:xfighter/modules/verification/bindings/verification_binding.dart';
+
 /// Placeholder screens for routes that don't have a full view yet.
 class _PlaceholderPage extends StatelessWidget {
   final String title;
@@ -94,9 +108,16 @@ class AppRouter {
   // Matchmaking / fight cards
   static const fightCards = '/fight-cards';
 
-  // Profile fallbacks
-  static const organizerProfile = '/organizer-profile';
-  static const adminProfile = '/admin-profile';
+  // Admin management
+  static const adminManagement = '/admin-management';
+  static const adminDetail = '/admin-detail';
+
+  // Organizer management
+  static const organizerManagement = '/organizer-management';
+  static const organizerDetail = '/organizer-detail';
+
+  // Verification
+  static const verification = '/verification';
 
   // Misc
   static const settings = '/settings';
@@ -134,7 +155,7 @@ class AppRouter {
     ),
     GetPage(
       name: gymDetail,
-      page: () => const GymListView(), // detail view coming soon
+      page: () => const GymListView(),
       binding: GymBinding(),
     ),
 
@@ -208,14 +229,36 @@ class AppRouter {
       }),
     ),
 
-    // ── Profile fallbacks ────────────────────────────────────────────────────
+    // ── Admin management ─────────────────────────────────────────────────────
     GetPage(
-      name: organizerProfile,
-      page: () => const _PlaceholderPage('Organizer Profile'),
+      name: adminManagement,
+      page: () => const AdminListView(),
+      binding: AdminBinding(),
     ),
     GetPage(
-      name: adminProfile,
-      page: () => const _PlaceholderPage('Admin Profile'),
+      name: adminDetail,
+      page: () => AdminDetailView(adminId: Get.arguments as String? ?? ''),
+      binding: AdminBinding(),
+    ),
+
+    // ── Organizer management ─────────────────────────────────────────────────
+    GetPage(
+      name: organizerManagement,
+      page: () => const OrganizerListView(),
+      binding: OrganizerBinding(),
+    ),
+    GetPage(
+      name: organizerDetail,
+      page: () =>
+          OrganizerDetailView(organizerId: Get.arguments as String? ?? ''),
+      binding: OrganizerBinding(),
+    ),
+
+    // ── Verification ─────────────────────────────────────────────────────────
+    GetPage(
+      name: verification,
+      page: () => const VerificationListView(),
+      binding: VerificationBinding(),
     ),
 
     // ── Misc ─────────────────────────────────────────────────────────────────

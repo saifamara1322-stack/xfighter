@@ -103,8 +103,10 @@ class ApiClient {
   Future<Map<String, dynamic>> put(
     String path, {
     Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParams,
   }) async {
-    final response = await _dio.put(path, data: data);
+    final response =
+        await _dio.put(path, data: data, queryParameters: queryParams);
     return _handle(response);
   }
 
