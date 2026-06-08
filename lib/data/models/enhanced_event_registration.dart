@@ -1,5 +1,6 @@
 // enhanced_event_registration.dart
 import 'package:flutter/material.dart';
+import 'package:xfighter/data/models/tournament_model.dart';
 import 'event_model.dart';
 import 'fighter_model.dart';
 
@@ -34,6 +35,7 @@ class EnhancedEventRegistration {
   final DateTime? organizerApprovedAt;
   final String? rejectionReason;
   final String? notes;
+   Tournament? tournament;
   
   // Optional related data (populated by repository)
   final Event? event;
@@ -54,6 +56,7 @@ class EnhancedEventRegistration {
     this.notes,
     this.event,
     this.fighterProfile,
+    this.tournament
   });
   
   factory EnhancedEventRegistration.fromJson(Map<String, dynamic> json) {

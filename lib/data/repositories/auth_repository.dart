@@ -42,6 +42,19 @@ class AuthRepository {
     return authResp;
   }
 
+  Future<AuthResponse> registerCoach(Map<String, dynamic> data) async {
+    final body = await _api.post('/auth/register-coach', data: data);
+    final authResp = AuthResponse.fromJson(body['data'] as Map<String, dynamic>);
+    await _api.setTokens(
+      accessToken: authResp.accessToken,
+      refreshToken: authResp.refreshToken,
+      role: authResp.role.name,
+      userId: authResp.userId,
+      status: authResp.status.name,
+    );
+    return authResp;
+  }
+
   Future<AuthResponse> registerReferee(Map<String, dynamic> data) async {
     final body = await _api.post('/auth/register-referee', data: data);
     final authResp = AuthResponse.fromJson(body['data'] as Map<String, dynamic>);
@@ -89,9 +102,17 @@ class AuthRepository {
 
   // ── Current user ──────────────────────────────────────────────────────────
 
-  Future<User> getCurrentUser() async {
-    final body = await _api.get('/auth/me');
-    return User.fromJson(body['data'] as Map<String, dynamic>);
+  Future<User?> getCurrentUser() async {
+    try {
+      final body = await _api.get('/auth/me');
+      final data = body['data'] as Map<String, dynamic>?;
+      if (data == null) return await getCachedUser();
+      final user = User.fromJson(data);
+      await cacheUser(user);
+      return user;
+    } catch (e) {
+      return await getCachedUser();
+    }
   }
 
   Future<User?> getCachedUser() async {

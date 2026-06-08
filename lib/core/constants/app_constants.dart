@@ -3,7 +3,7 @@ class AppConstants {
   static const String appTitle = 'MMA Fighter Management System';
 
   /// Base URL for the Spring Boot API (no trailing slash)
-  static const String baseUrl = 'http://192.168.1.158:8080';
+  static const String baseUrl = 'https://api.ufw-world.com';
 
   /// All API calls are prefixed with this
   static const String apiPrefix = '/api';

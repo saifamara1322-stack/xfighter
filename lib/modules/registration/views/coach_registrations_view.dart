@@ -7,7 +7,7 @@ import '../../../data/models/user_model.dart';
 class CoachRegistrationsView extends StatelessWidget {
   CoachRegistrationsView({super.key});
   
-  final RegistrationController _controller = Get.find<RegistrationController>();
+  final RegistrationController _controller = Get.put(RegistrationController());
   
   @override
   Widget build(BuildContext context) {

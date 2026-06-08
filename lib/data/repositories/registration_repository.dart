@@ -3,15 +3,39 @@ import 'package:xfighter/data/models/enhanced_event_registration.dart';
 
 class RegistrationRepository {
   final ApiClient _api = ApiClient();
-  final List<EnhancedEventRegistration> _dummyRegistrations = [];
+
+  // Helper to map API registration to UI model
+  EnhancedEventRegistration _mapToEnhanced(Map<String, dynamic> r, [Map<String, dynamic>? t]) {
+    return EnhancedEventRegistration(
+      id: r['id']?.toString() ?? '',
+      eventId: r['tournamentId']?.toString() ?? '',
+      fighterId: (r['fighterUserId'] ?? r['fighterId'])?.toString() ?? '',
+      status: _mapStatus(r['status']),
+      weightClass: r['categoryName'] ?? r['divisionName'] ?? '',
+      registeredAt: r['registeredAt'] != null ? DateTime.tryParse(r['registeredAt']) ?? DateTime.now() : DateTime.now(),
+      coachId: null, // populate if api provides
+      organizerId: t?['organizerId']?.toString(),
+      rejectionReason: r['rejectionReason'],
+    );
+  }
+
+  RegistrationStatus _mapStatus(String? status) {
+    switch (status) {
+      case 'PENDING': return RegistrationStatus.pending;
+      case 'APPROVED': return RegistrationStatus.approvedByOrganizer;
+      case 'REJECTED': return RegistrationStatus.rejected;
+      case 'CANCELLED': return RegistrationStatus.cancelled;
+      default: return RegistrationStatus.pending;
+    }
+  }
 
   // ── Fighter registrations ─────────────────────────────────────────────────
 
   Future<List<EnhancedEventRegistration>> getFighterRegistrations({
     required String fighterId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _dummyRegistrations.where((r) => r.fighterId == fighterId).toList();
+    return _getAllRegistrationsAndFilter((r) => 
+      (r['fighterUserId'] == fighterId || r['fighterId'] == fighterId));
   }
 
   // ── Coach registrations ───────────────────────────────────────────────────
@@ -19,8 +43,10 @@ class RegistrationRepository {
   Future<List<EnhancedEventRegistration>> getCoachPendingRegistrations({
     required String coachId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _dummyRegistrations.where((r) => r.coachId == coachId).toList();
+    // API doesn't specify coach registrations directly, filter by status pending for now
+    // Actually, coach approval might not exist in the new API (just APPROVED/REJECTED).
+    final regs = await _getAllRegistrationsAndFilter((r) => r['status'] == 'PENDING');
+    return regs;
   }
 
   // ── Organizer registrations ───────────────────────────────────────────────
@@ -28,16 +54,50 @@ class RegistrationRepository {
   Future<List<EnhancedEventRegistration>> getOrganizerPendingRegistrations({
     required String organizerId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _dummyRegistrations.where((r) => r.organizerId == organizerId).toList();
+    return _getAllRegistrationsAndFilter((r) => r['status'] == 'PENDING');
+  }
+
+  Future<List<EnhancedEventRegistration>> _getAllRegistrationsAndFilter(bool Function(Map<String, dynamic>) filter) async {
+    try {
+      final tournamentsResp = await _api.get('/tournaments', queryParams: {'page': 0, 'size': 50});
+      final List<dynamic> tournamentsData = (tournamentsResp['data']?['content'] ?? tournamentsResp['data'] ?? []);
+      
+      List<EnhancedEventRegistration> results = [];
+      for (var t in tournamentsData) {
+        if (t is! Map<String, dynamic>) continue;
+        final String? tId = t['id'];
+        if (tId == null) continue;
+        try {
+          final regResp = await _api.get('/tournaments/$tId/registrations');
+          final List<dynamic> regs = regResp['data'] ?? [];
+          for (var r in regs) {
+            if (r is Map<String, dynamic> && filter(r)) {
+               results.add(_mapToEnhanced(r, t));
+            }
+          }
+        } catch (e) {
+          // Ignore tournament fetch errors
+        }
+      }
+      return results;
+    } catch (e) {
+      return [];
+    }
   }
 
   // ── Register ──────────────────────────────────────────────────────────────
 
   Future<bool> registerForEvent(EnhancedEventRegistration registration) async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    _dummyRegistrations.add(registration);
-    return true;
+    try {
+      final data = {
+        'fighterUserId': registration.fighterId,
+        'tournamentCategoryId': registration.weightClass, // In the UI they might be selecting divisionId as weightClass
+      };
+      await _api.post('/tournaments/${registration.eventId}/registrations', data: data);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   // ── Approval / rejection ──────────────────────────────────────────────────
@@ -47,24 +107,13 @@ class RegistrationRepository {
     required String coachId,
     String? notes,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _dummyRegistrations.indexWhere((r) => r.id == registrationId);
-    if (index != -1) {
-      final current = _dummyRegistrations[index];
-      _dummyRegistrations[index] = EnhancedEventRegistration(
-        id: current.id,
-        eventId: current.eventId,
-        fighterId: current.fighterId,
-        status: RegistrationStatus.approvedByCoach,
-        weightClass: current.weightClass,
-        registeredAt: current.registeredAt,
-        coachId: current.coachId,
-        coachApprovedAt: DateTime.now(),
-        notes: notes ?? current.notes,
-      );
+    // Real API might only have one approve step
+    try {
+      await _api.patch('/tournaments/registrations/$registrationId/approve');
       return true;
+    } catch (e) {
+      return false;
     }
-    return false;
   }
 
   Future<bool> approveByOrganizer({
@@ -72,26 +121,12 @@ class RegistrationRepository {
     required String organizerId,
     String? notes,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _dummyRegistrations.indexWhere((r) => r.id == registrationId);
-    if (index != -1) {
-      final current = _dummyRegistrations[index];
-      _dummyRegistrations[index] = EnhancedEventRegistration(
-        id: current.id,
-        eventId: current.eventId,
-        fighterId: current.fighterId,
-        status: RegistrationStatus.approvedByOrganizer,
-        weightClass: current.weightClass,
-        registeredAt: current.registeredAt,
-        coachId: current.coachId,
-        coachApprovedAt: current.coachApprovedAt,
-        organizerId: organizerId,
-        organizerApprovedAt: DateTime.now(),
-        notes: notes ?? current.notes,
-      );
+    try {
+      await _api.patch('/tournaments/registrations/$registrationId/approve');
       return true;
+    } catch (e) {
+      return false;
     }
-    return false;
   }
 
   Future<bool> rejectRegistration({
@@ -99,31 +134,23 @@ class RegistrationRepository {
     required String rejectedBy,
     required String reason,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _dummyRegistrations.indexWhere((r) => r.id == registrationId);
-    if (index != -1) {
-      final current = _dummyRegistrations[index];
-      _dummyRegistrations[index] = EnhancedEventRegistration(
-        id: current.id,
-        eventId: current.eventId,
-        fighterId: current.fighterId,
-        status: RegistrationStatus.rejected,
-        weightClass: current.weightClass,
-        registeredAt: current.registeredAt,
-        coachId: current.coachId,
-        coachApprovedAt: current.coachApprovedAt,
-        rejectionReason: reason,
-        notes: current.notes,
-      );
+    try {
+      await _api.patch('/tournaments/registrations/$registrationId/reject', data: {
+        'reason': reason
+      });
       return true;
+    } catch (e) {
+      return false;
     }
-    return false;
   }
 
   Future<bool> cancelRegistration(String registrationId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _dummyRegistrations.removeWhere((r) => r.id == registrationId);
-    return true;
+    try {
+      await _api.patch('/tournaments/registrations/$registrationId/cancel');
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   // ── Eligibility ───────────────────────────────────────────────────────────
@@ -132,19 +159,19 @@ class RegistrationRepository {
     required String fighterId,
     required String eventId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Not explicitly in the API spec, return true for now
     return EligibilityCheck(isEligible: true);
   }
 
   // ── Event details ─────────────────────────────────────────────────────────
 
   Future<Map<String, dynamic>?> getEventDetails(String eventId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return {
-      'id': eventId,
-      'name': 'Dummy Event',
-      'date': DateTime.now().add(const Duration(days: 10)).toIso8601String(),
-    };
+    try {
+      final response = await _api.get('/tournaments/$eventId');
+      return response['data'];
+    } catch (e) {
+      return null;
+    }
   }
 }
 
@@ -167,7 +194,7 @@ class EligibilityCheck {
         details: json['details'] as Map<String, dynamic>?,
       );
 }
-// Add this method to your RegistrationRepository
+
 extension RegistrationRepositoryExtension on RegistrationRepository {
   Future<bool> registerFighter(Map<String, dynamic> registrationData) async {
     try {

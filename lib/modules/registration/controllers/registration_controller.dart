@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/repositories/registration_repository.dart';
 import '../../../data/repositories/country_repository.dart';
-import '../../../data/models/event_model.dart';
+import '../../../data/repositories/tournament_repository.dart';
+import '../../../data/models/enhanced_event_registration.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/models/country_model.dart';
+import '../../../data/models/tournament_model.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../fighter/controllers/fighter_controller.dart';
 
 class RegistrationController extends GetxController {
   final RegistrationRepository _registrationRepository = RegistrationRepository();
   final CountryRepository _countryRepository = CountryRepository();
+  final TournamentRepository _tournamentRepository = TournamentRepository();
   final AuthController _authController = Get.find<AuthController>();
   final FighterController _fighterController = Get.find<FighterController>();
   
@@ -47,17 +50,19 @@ class RegistrationController extends GetxController {
   final hasError = false.obs;
   final errorMessage = ''.obs;
   
-  // Cache
-  final Map<String, Map<String, dynamic>?> _eventCache = {};
+  // Cache for tournament objects
+  final Map<String, Tournament?> _tournamentCache = {};
 
   @override
   void onInit() {
     super.onInit();
     loadUserRegistrations();
-    loadCountries(); // Load countries when controller initializes
+    loadCountries();
   }
   
-  // Load countries from API
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Country Methods (unchanged)
+  // ─────────────────────────────────────────────────────────────────────────────
   Future<void> loadCountries() async {
     try {
       isLoadingCountries.value = true;
@@ -66,8 +71,6 @@ class RegistrationController extends GetxController {
       
       final fetchedCountries = await _countryRepository.getAllCountries();
       countries.value = fetchedCountries;
-      
-      // Sort alphabetically by name
       countries.sort((a, b) => a.name.compareTo(b.name));
       
       print('✅ Loaded ${countries.length} countries successfully');
@@ -81,7 +84,6 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Get country by ID
   Country? getCountryById(String id) {
     try {
       return countries.firstWhereOrNull((country) => country.id == id);
@@ -90,7 +92,6 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Get country by code
   Country? getCountryByCode(String code) {
     try {
       return countries.firstWhereOrNull((country) => country.code == code);
@@ -99,7 +100,6 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Get country by name
   Country? getCountryByName(String name) {
     try {
       return countries.firstWhereOrNull((country) => country.name == name);
@@ -108,18 +108,16 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Set selected country
   void setSelectedCountry(Country? country) {
     selectedCountry.value = country;
     if (country != null) {
-      selectedCountryId.value = country.id; // Store the UUID
+      selectedCountryId.value = country.id;
       print('Selected country ID: ${country.id} (UUID format)');
     } else {
       selectedCountryId.value = '';
     }
   }
   
-  // Set selected country by ID
   void setSelectedCountryById(String id) {
     final country = getCountryById(id);
     selectedCountry.value = country;
@@ -128,7 +126,6 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Set selected country by code
   void setSelectedCountryByCode(String code) {
     final country = getCountryByCode(code);
     selectedCountry.value = country;
@@ -137,39 +134,18 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Get selected country info
-  String getSelectedCountryName() {
-    return selectedCountry.value?.name ?? '';
-  }
-  
-  String getSelectedCountryCode() {
-    return selectedCountry.value?.code ?? '';
-  }
-  
-  String getSelectedCountryId() {
-    return selectedCountryId.value;
-  }
-  
-  String? getSelectedCountryFlagUrl() {
-    return selectedCountry.value?.flagUrl;
-  }
-  
+  String getSelectedCountryName() => selectedCountry.value?.name ?? '';
+  String getSelectedCountryCode() => selectedCountry.value?.code ?? '';
+  String getSelectedCountryId() => selectedCountryId.value;
+  String? getSelectedCountryFlagUrl() => selectedCountry.value?.flagUrl;
   void clearSelectedCountry() {
     selectedCountry.value = null;
     selectedCountryId.value = '';
   }
   
-  // Set category
-  void setCategory(String category) {
-    selectedCategory.value = category;
-  }
+  void setCategory(String category) => selectedCategory.value = category;
+  void setWeight(double weight) => weightInKg.value = weight;
   
-  // Set weight
-  void setWeight(double weight) {
-    weightInKg.value = weight;
-  }
-  
-  // Search countries
   List<Country> searchCountries(String query) {
     if (query.isEmpty) return countries;
     return countries.where((country) {
@@ -178,22 +154,13 @@ class RegistrationController extends GetxController {
     }).toList();
   }
   
-  // Refresh countries
-  Future<void> refreshCountries() async {
-    await loadCountries();
-  }
+  Future<void> refreshCountries() async => await loadCountries();
+  int getCountriesCount() => countries.length;
+  bool get areCountriesLoaded => !isLoadingCountries.value && countries.isNotEmpty;
   
-  // Get countries count
-  int getCountriesCount() {
-    return countries.length;
-  }
-  
-  // Check if countries are loaded
-  bool get areCountriesLoaded {
-    return !isLoadingCountries.value && countries.isNotEmpty;
-  }
-  
-  // Register fighter with proper API format
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Fighter registration (sign-up)
+  // ─────────────────────────────────────────────────────────────────────────────
   Future<bool> registerFighterWithCountry({
     required String email,
     required String password,
@@ -201,38 +168,32 @@ class RegistrationController extends GetxController {
     required String phoneNumber,
     required String category,
     required double weight,
-    String? countryId, // This should be a valid UUID
+    String? countryId,
   }) async {
     try {
       isLoading.value = true;
       
-      // Validate country ID is a valid UUID format (36 characters)
       if (countryId != null && countryId.isNotEmpty) {
-        // Basic UUID validation (check if it matches UUID pattern)
         final uuidRegex = RegExp(
           r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
           caseSensitive: false,
         );
-        
         if (!uuidRegex.hasMatch(countryId)) {
-          throw Exception('Invalid country ID format. Must be a valid UUID (e.g., 3fa85f64-5717-4562-b3fc-2c963f66afa6)');
+          throw Exception('Invalid country ID format. Must be a valid UUID');
         }
       }
       
-      // Prepare the registration data exactly as the API expects
       final registrationData = {
         'email': email,
         'password': password,
         'fullName': fullName,
         'phoneNumber': phoneNumber,
-        'countryId': countryId, // This must be a valid UUID or null
+        'countryId': countryId,
         'category': category,
         'weight': weight,
       };
       
       print('📝 Registering fighter with data: $registrationData');
-      
-      // Call the API through your repository
       final result = await _registrationRepository.registerFighter(registrationData);
       
       if (result) {
@@ -249,12 +210,14 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Register fighter for an event (existing method)
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Event registration (fighter registers for a tournament)
+  // ─────────────────────────────────────────────────────────────────────────────
   Future<bool> registerForEvent({
     required String eventId,
     required String weightClass,
     String? notes,
-    String? countryId, // Add countryId parameter - must be UUID
+    String? countryId,
   }) async {
     try {
       isLoading.value = true;
@@ -264,13 +227,9 @@ class RegistrationController extends GetxController {
         throw Exception('Only fighters can register for events');
       }
       
-      // Check eligibility
       final isEligible = await checkEligibility(eventId);
-      if (!isEligible) {
-        return false;
-      }
+      if (!isEligible) return false;
       
-      // Get fighter's current profile
       final fighterProfile = _fighterController.currentFighter.value;
       final coachId = fighterProfile?.coach?.id;
       
@@ -303,7 +262,9 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Load all registrations for the current user based on role
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Load registrations (with tournament details)
+  // ─────────────────────────────────────────────────────────────────────────────
   Future<void> loadUserRegistrations() async {
     try {
       isLoading.value = true;
@@ -315,7 +276,6 @@ class RegistrationController extends GetxController {
         throw Exception('User not logged in');
       }
       
-      // Load registrations based on user role
       switch (currentUser.role) {
         case UserRole.FIGHTER:
           await loadFighterRegistrations();
@@ -341,7 +301,20 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Load fighter registrations (for fighters)
+  Future<void> _attachTournament(EnhancedEventRegistration registration) async {
+    if (_tournamentCache.containsKey(registration.eventId)) {
+      registration.tournament = _tournamentCache[registration.eventId];
+      return;
+    }
+    try {
+      final tournament = await _tournamentRepository.getTournamentById(registration.eventId);
+      registration.tournament = tournament;
+      _tournamentCache[registration.eventId] = tournament;
+    } catch (e) {
+      print('Failed to fetch tournament ${registration.eventId}: $e');
+    }
+  }
+  
   Future<void> loadFighterRegistrations() async {
     try {
       final currentUser = _authController.currentUser.value;
@@ -352,17 +325,15 @@ class RegistrationController extends GetxController {
       );
       fighterRegistrations.value = registrations;
       
-      for (var registration in registrations) {
-        if (registration.event != null) {
-          _eventCache[registration.eventId] = registration.event?.toJson();
-        }
+      for (var reg in registrations) {
+        await _attachTournament(reg);
       }
+      fighterRegistrations.refresh();
     } catch (e) {
       _showSnackbar('Error', 'Failed to load fighter registrations: ${e.toString()}', backgroundColor: Colors.red);
     }
   }
   
-  // Load coach registrations (for coaches - registrations they need to approve)
   Future<void> loadCoachRegistrations() async {
     try {
       final currentUser = _authController.currentUser.value;
@@ -374,22 +345,18 @@ class RegistrationController extends GetxController {
       pendingCoachRegistrations.value = registrations;
       coachRegistrations.value = registrations;
       
-      for (var registration in registrations) {
-        if (registration.event != null) {
-          _eventCache[registration.eventId] = registration.event?.toJson();
-        }
+      for (var reg in registrations) {
+        await _attachTournament(reg);
       }
+      coachRegistrations.refresh();
+      pendingCoachRegistrations.refresh();
     } catch (e) {
       _showSnackbar('Error', 'Failed to load coach registrations: ${e.toString()}', backgroundColor: Colors.red);
     }
   }
   
-  // Fetch coach registrations (alias for loadCoachRegistrations)
-  Future<void> fetchCoachRegistrations() async {
-    await loadCoachRegistrations();
-  }
+  Future<void> fetchCoachRegistrations() async => await loadCoachRegistrations();
   
-  // Load organizer registrations (for organizers - registrations needing final approval)
   Future<void> loadOrganizerRegistrations() async {
     try {
       final currentUser = _authController.currentUser.value;
@@ -400,17 +367,18 @@ class RegistrationController extends GetxController {
       );
       eventRegistrations.value = registrations;
       
-      for (var registration in registrations) {
-        if (registration.event != null) {
-          _eventCache[registration.eventId] = registration.event?.toJson();
-        }
+      for (var reg in registrations) {
+        await _attachTournament(reg);
       }
+      eventRegistrations.refresh();
     } catch (e) {
       _showSnackbar('Error', 'Failed to load organizer registrations: ${e.toString()}', backgroundColor: Colors.red);
     }
   }
   
-  // Update registration status
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Status updates (approve, reject, cancel)
+  // ─────────────────────────────────────────────────────────────────────────────
   Future<void> updateRegistrationStatus(String registrationId, String status) async {
     try {
       isLoading.value = true;
@@ -459,7 +427,6 @@ class RegistrationController extends GetxController {
         String message = status == 'approved' ? 'Registration approved successfully' :
                         status == 'rejected' ? 'Registration rejected' :
                         'Registration cancelled';
-        
         _showSnackbar('Success', message, backgroundColor: Colors.green);
       } else {
         throw Exception('Failed to update registration status');
@@ -471,7 +438,6 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Coach approves a fighter registration
   Future<bool> approveByCoach(String registrationId, {String? notes}) async {
     try {
       isLoading.value = true;
@@ -490,7 +456,6 @@ class RegistrationController extends GetxController {
       if (result) {
         pendingCoachRegistrations.removeWhere((reg) => reg.id == registrationId);
         coachRegistrations.removeWhere((reg) => reg.id == registrationId);
-        
         _updateCounts();
         _showSnackbar('Success', 'Registration approved', backgroundColor: Colors.green);
         return true;
@@ -505,7 +470,6 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Organizer approves a fighter registration (final approval)
   Future<bool> approveByOrganizer(String registrationId, {String? notes}) async {
     try {
       isLoading.value = true;
@@ -523,7 +487,6 @@ class RegistrationController extends GetxController {
       
       if (result) {
         await _updateLocalRegistrationStatus(registrationId, RegistrationStatus.approvedByOrganizer);
-        
         _updateCounts();
         _showSnackbar('Success', 'Registration fully approved', backgroundColor: Colors.green);
         return true;
@@ -538,7 +501,6 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Reject a registration
   Future<bool> rejectRegistration(String registrationId, String reason) async {
     try {
       isLoading.value = true;
@@ -552,7 +514,6 @@ class RegistrationController extends GetxController {
       
       if (result) {
         await _updateLocalRegistrationStatus(registrationId, RegistrationStatus.rejected);
-        
         _updateCounts();
         _showSnackbar('Info', 'Registration rejected', backgroundColor: Colors.orange);
         return true;
@@ -567,7 +528,6 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Cancel registration (fighter self-cancel)
   Future<bool> cancelRegistration(String registrationId) async {
     try {
       isLoading.value = true;
@@ -576,7 +536,6 @@ class RegistrationController extends GetxController {
       
       if (result) {
         fighterRegistrations.removeWhere((reg) => reg.id == registrationId);
-        
         _updateCounts();
         _showSnackbar('Success', 'Registration cancelled', backgroundColor: Colors.green);
         return true;
@@ -591,7 +550,9 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Check fighter eligibility for an event
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Eligibility and helpers
+  // ─────────────────────────────────────────────────────────────────────────────
   Future<bool> checkEligibility(String eventId) async {
     try {
       isCheckingEligibility.value = true;
@@ -613,11 +574,9 @@ class RegistrationController extends GetxController {
       );
       
       eligibilityResult.value = result;
-      
       if (!result.isEligible) {
         _showSnackbar('Not Eligible', result.reason ?? 'You are not eligible for this event', backgroundColor: Colors.orange);
       }
-      
       return result.isEligible;
     } catch (e) {
       _showSnackbar('Error', 'Failed to check eligibility: ${e.toString()}', backgroundColor: Colors.red);
@@ -627,43 +586,21 @@ class RegistrationController extends GetxController {
     }
   }
   
-  // Get status display text and color
   Map<String, dynamic> getRegistrationStatusInfo(RegistrationStatus status) {
     switch (status) {
       case RegistrationStatus.pending:
-        return {
-          'text': 'Pending Coach Approval',
-          'color': Colors.orange,
-          'icon': Icons.pending_actions,
-        };
+        return {'text': 'Pending Coach Approval', 'color': Colors.orange, 'icon': Icons.pending_actions};
       case RegistrationStatus.approvedByCoach:
-        return {
-          'text': 'Pending Organizer Approval',
-          'color': Colors.blue,
-          'icon': Icons.verified,
-        };
+        return {'text': 'Pending Organizer Approval', 'color': Colors.blue, 'icon': Icons.verified};
       case RegistrationStatus.approvedByOrganizer:
-        return {
-          'text': 'Approved',
-          'color': Colors.green,
-          'icon': Icons.check_circle,
-        };
+        return {'text': 'Approved', 'color': Colors.green, 'icon': Icons.check_circle};
       case RegistrationStatus.rejected:
-        return {
-          'text': 'Rejected',
-          'color': Colors.red,
-          'icon': Icons.cancel,
-        };
+        return {'text': 'Rejected', 'color': Colors.red, 'icon': Icons.cancel};
       case RegistrationStatus.cancelled:
-        return {
-          'text': 'Cancelled',
-          'color': Colors.grey,
-          'icon': Icons.remove_circle,
-        };
+        return {'text': 'Cancelled', 'color': Colors.grey, 'icon': Icons.remove_circle};
     }
   }
   
-  // Update local registration status
   Future<void> _updateLocalRegistrationStatus(String registrationId, RegistrationStatus newStatus) async {
     // Update in fighterRegistrations
     final fighterIndex = fighterRegistrations.indexWhere((r) => r.id == registrationId);
@@ -681,6 +618,7 @@ class RegistrationController extends GetxController {
         organizerApprovedAt: newStatus == RegistrationStatus.approvedByOrganizer ? DateTime.now() : fighterRegistrations[fighterIndex].organizerApprovedAt,
         rejectionReason: newStatus == RegistrationStatus.rejected ? fighterRegistrations[fighterIndex].rejectionReason : null,
         notes: fighterRegistrations[fighterIndex].notes,
+        tournament: fighterRegistrations[fighterIndex].tournament,
       );
       fighterRegistrations[fighterIndex] = updatedReg;
       fighterRegistrations.refresh();
@@ -702,12 +640,13 @@ class RegistrationController extends GetxController {
         organizerApprovedAt: newStatus == RegistrationStatus.approvedByOrganizer ? DateTime.now() : coachRegistrations[coachIndex].organizerApprovedAt,
         rejectionReason: newStatus == RegistrationStatus.rejected ? coachRegistrations[coachIndex].rejectionReason : null,
         notes: coachRegistrations[coachIndex].notes,
+        tournament: coachRegistrations[coachIndex].tournament,
       );
       coachRegistrations[coachIndex] = updatedReg;
       coachRegistrations.refresh();
     }
     
-    // Update in eventRegistrations (organizer view)
+    // Update in eventRegistrations
     final eventIndex = eventRegistrations.indexWhere((r) => r.id == registrationId);
     if (eventIndex != -1) {
       final updatedReg = EnhancedEventRegistration(
@@ -723,77 +662,45 @@ class RegistrationController extends GetxController {
         organizerApprovedAt: newStatus == RegistrationStatus.approvedByOrganizer ? DateTime.now() : eventRegistrations[eventIndex].organizerApprovedAt,
         rejectionReason: newStatus == RegistrationStatus.rejected ? eventRegistrations[eventIndex].rejectionReason : null,
         notes: eventRegistrations[eventIndex].notes,
+        tournament: eventRegistrations[eventIndex].tournament,
       );
       eventRegistrations[eventIndex] = updatedReg;
       eventRegistrations.refresh();
     }
   }
   
-  // Update counts for dashboard
   void _updateCounts() {
     pendingCount.value = fighterRegistrations.where((r) => r.status == RegistrationStatus.pending).length +
                          pendingCoachRegistrations.where((r) => r.status == RegistrationStatus.pending).length;
-    
     coachApprovedCount.value = fighterRegistrations.where((r) => r.status == RegistrationStatus.approvedByCoach).length +
                                pendingCoachRegistrations.where((r) => r.status == RegistrationStatus.approvedByCoach).length;
-    
     organizerApprovedCount.value = fighterRegistrations.where((r) => r.status == RegistrationStatus.approvedByOrganizer).length +
                                    pendingCoachRegistrations.where((r) => r.status == RegistrationStatus.approvedByOrganizer).length;
-    
     rejectedCount.value = fighterRegistrations.where((r) => r.status == RegistrationStatus.rejected).length +
                           pendingCoachRegistrations.where((r) => r.status == RegistrationStatus.rejected).length;
   }
   
-  // Get registrations by status
   List<EnhancedEventRegistration> getRegistrationsByStatus(RegistrationStatus status) {
     return fighterRegistrations.where((r) => r.status == status).toList();
   }
   
-  // Check if registration is pending approval
-  bool isRegistrationPending(EnhancedEventRegistration registration) {
-    return registration.status == RegistrationStatus.pending;
-  }
+  bool isRegistrationPending(EnhancedEventRegistration registration) => registration.status == RegistrationStatus.pending;
+  bool needsOrganizerApproval(EnhancedEventRegistration registration) => registration.status == RegistrationStatus.approvedByCoach;
+  bool isFullyApproved(EnhancedEventRegistration registration) => registration.status == RegistrationStatus.approvedByOrganizer;
   
-  // Check if registration needs organizer approval
-  bool needsOrganizerApproval(EnhancedEventRegistration registration) {
-    return registration.status == RegistrationStatus.approvedByCoach;
-  }
-  
-  // Check if registration is fully approved
-  bool isFullyApproved(EnhancedEventRegistration registration) {
-    return registration.status == RegistrationStatus.approvedByOrganizer;
-  }
-  
-  // Clear error state
   void clearError() {
     hasError.value = false;
     errorMessage.value = '';
   }
   
-  // Refresh all data
   Future<void> refreshData() async {
     await loadUserRegistrations();
-    await loadCountries(); // Also refresh countries
+    await loadCountries();
     if (_authController.currentUser.value?.role == UserRole.FIGHTER) {
       final userId = _authController.currentUser.value?.id;
       if (userId != null) {
         await _fighterController.loadFighterProfile(userId);
       }
-    }
-  }
-  
-  // Get event from cache or fetch
-  Future<Map<String, dynamic>?> getEvent(String eventId) async {
-    if (_eventCache.containsKey(eventId)) {
-      return _eventCache[eventId];
-    }
-    
-    try {
-      final eventData = await _registrationRepository.getEventDetails(eventId);
-      _eventCache[eventId] = eventData;
-      return eventData;
-    } catch (e) {
-      return null;
     }
   }
   
@@ -814,4 +721,3 @@ class RegistrationController extends GetxController {
     });
   }
 }
-

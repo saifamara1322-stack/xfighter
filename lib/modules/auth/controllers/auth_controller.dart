@@ -156,16 +156,18 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
     try {
       await _authRepository.login(email, password);
       final user = await _authRepository.getCurrentUser();
-      await _authRepository.cacheUser(user);
-      currentUser.value = user;
+      if (user != null) {
+        await _authRepository.cacheUser(user);
+        currentUser.value = user;
+      }
       isLoggedIn.value = true;
       emailController.clear();
       passwordController.clear();
-      
+
       // Clear any lingering errors
       clearErrors();
 
-      _showSnackbar('Succès', 'Bienvenue ${user.fullName}!');
+      _showSnackbar('Succès', 'Bienvenue ${user?.fullName ?? ''}!');
       Get.offAllNamed('/dashboard');
     } catch (e) {
       errorMessage.value = e.toString();

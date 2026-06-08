@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xfighter/core/routes/app_router.dart';
-import 'package:xfighter/modules/dashboard/controllers/dashboard_controller.dart';
 import 'package:xfighter/data/models/user_model.dart';
+import 'package:xfighter/modules/dashboard/controllers/dashboard_controller.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -15,17 +15,32 @@ class DashboardView extends StatelessWidget {
       backgroundColor: const Color(0xFF0A0A0A),
       appBar: AppBar(
         title: const Text(
-          'XFIGHTER DASHBOARD',
+          'XFIGHTER',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
-            fontSize: 16,
+            fontSize: 18,
           ),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF0D0D1A),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          Obx(() {
+            final user = controller.currentUser.value;
+            if (user == null) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: user.role.color.withOpacity(0.2),
+                child: Text(
+                  user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?',
+                  style: TextStyle(color: user.role.color, fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ),
+            );
+          }),
           Container(
             margin: const EdgeInsets.only(right: 8),
             child: IconButton(
@@ -37,21 +52,39 @@ class DashboardView extends StatelessWidget {
       ),
       drawer: _buildDrawer(controller),
       body: Obx(() {
-        final user = controller.currentUser.value;
-        if (user == null) {
+        if (controller.isLoading.value || controller.currentUser.value == null) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFFE31837)),
+          );
+        }
+        if (controller.tabPages.isEmpty) {
           return const Center(
             child: Text(
-              'No user data found',
+              'No tabs available for this role',
               style: TextStyle(color: Colors.white54),
             ),
           );
         }
-        return _buildDashboardContent(user);
+        return IndexedStack(
+          index: controller.currentTabIndex.value,
+          children: controller.tabPages,
+        );
+      }),
+      bottomNavigationBar: Obx(() {
+        if (controller.bottomNavItems.length <= 1) return const SizedBox.shrink();
+        return BottomNavigationBar(
+          backgroundColor: const Color(0xFF0D0D1A),
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: const Color(0xFFE31837),
+          unselectedItemColor: Colors.white54,
+          currentIndex: controller.currentTabIndex.value,
+          onTap: controller.changeTab,
+          items: controller.bottomNavItems,
+          elevation: 8,
+        );
       }),
     );
   }
-
-  // ── Drawer ──────────────────────────────────────────────────────────────────
 
   Widget _buildDrawer(DashboardController controller) {
     return Drawer(
@@ -83,7 +116,7 @@ class DashboardView extends StatelessWidget {
                   ),
                 ),
                 accountName: Text(
-                  user?.fullName ?? 'User',
+                  user?.fullName ?? 'Loading...',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -101,26 +134,25 @@ class DashboardView extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                _item(Icons.dashboard, 'DASHBOARD', () => Get.back()),
-                _item(Icons.person, 'MY PROFILE', () {
+                _drawerItem(Icons.dashboard, 'DASHBOARD', () => Get.back()),
+                _drawerItem(Icons.person, 'MY PROFILE', () {
                   Get.back();
-                  _navigateToProfile(Get.find<DashboardController>());
+                  _navigateToProfile(controller);
                 }),
                 const Divider(color: Colors.white24, height: 1),
                 Obx(() {
-                  final c = Get.find<DashboardController>();
-                  if (c.isFighter()) return _buildFighterMenu();
-                  if (c.isCoach()) return _buildCoachMenu();
-                  if (c.isOrganizer()) return _buildOrganizerMenu();
-                  if (c.isAdmin()) return _buildAdminMenu();
+                  if (controller.isFighter()) return _buildFighterMenu();
+                  if (controller.isCoach()) return _buildCoachMenu();
+                  if (controller.isClub()) return _buildClubMenu();
+                  if (controller.isOrganizer()) return _buildOrganizerMenu();
+                  if (controller.isReferee()) return _buildRefereeMenu();
+                  if (controller.isAdmin()) return _buildAdminMenu();
                   return const SizedBox();
                 }),
                 const Divider(color: Colors.white24, height: 1),
-                _item(Icons.settings, 'SETTINGS',
-                    () { Get.back(); Get.toNamed(AppRouter.settings); }),
-                _item(Icons.logout, 'LOGOUT', () {
+                _drawerItem(Icons.logout, 'LOGOUT', () {
                   Get.back();
-                  Get.find<DashboardController>().showLogoutDialog();
+                  controller.showLogoutDialog();
                 }, isRed: true),
               ],
             ),
@@ -130,199 +162,118 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  // ── Role menus ──────────────────────────────────────────────────────────────
-
   Widget _buildFighterMenu() => Column(children: [
-        _item(Icons.fitness_center, 'MY RECORD',
-            () { Get.back(); Get.toNamed(AppRouter.fighterProfile); }),
-        _item(Icons.event, 'EVENTS',
-            () { Get.back(); Get.toNamed(AppRouter.events); }),
-        _item(Icons.assignment_turned_in, 'MY REGISTRATIONS',
-            () { Get.back(); Get.toNamed(AppRouter.myRegistrations); }),
+        _drawerItem(Icons.fitness_center, 'MY RECORD', () {
+          Get.back(); Get.toNamed(AppRouter.fighterRecord);
+        }),
+        _drawerItem(Icons.emoji_events, 'TOURNAMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.tournaments);
+        }),
+        _drawerItem(Icons.assignment_turned_in, 'MY REGISTRATIONS', () {
+          Get.back(); Get.toNamed(AppRouter.myRegistrations);
+        }),
       ]);
 
   Widget _buildCoachMenu() => Column(children: [
-        _item(Icons.people, 'MY ATHLETES',
-            () { Get.back(); Get.toNamed(AppRouter.coachAthletes); }),
-        _item(Icons.school, 'COACH PROFILE',
-            () { Get.back(); Get.toNamed(AppRouter.coachProfile); }),
-        _item(Icons.business, 'MANAGE GYMS',
-            () { Get.back(); Get.toNamed(AppRouter.gyms); }),
-        _item(Icons.assignment_turned_in, 'PENDING REGISTRATIONS',
-            () { Get.back(); Get.toNamed(AppRouter.pendingRegistrations); }),
+        _drawerItem(Icons.people, 'MY ATHLETES', () {
+          Get.back(); Get.toNamed(AppRouter.coachAthletes);
+        }),
+        _drawerItem(Icons.emoji_events, 'TOURNAMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.tournaments);
+        }),
+        _drawerItem(Icons.business, 'CLUBS', () {
+          Get.back(); Get.toNamed(AppRouter.clubs);
+        }),
+      ]);
+
+  Widget _buildClubMenu() => Column(children: [
+        _drawerItem(Icons.sports_mma, 'MY FIGHTERS', () {
+          Get.back(); Get.toNamed(AppRouter.clubFighters);
+        }),
+        _drawerItem(Icons.sports, 'MY COACHES', () {
+          Get.back(); Get.toNamed(AppRouter.clubCoaches);
+        }),
+        _drawerItem(Icons.emoji_events, 'TOURNAMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.tournaments);
+        }),
+        _drawerItem(Icons.mail, 'INVITATIONS', () {
+          Get.back(); Get.toNamed(AppRouter.clubInvitations);
+        }),
+        _drawerItem(Icons.settings, 'CLUB PROFILE', () {
+          Get.back(); Get.toNamed(AppRouter.clubSettings);
+        }),
       ]);
 
   Widget _buildOrganizerMenu() => Column(children: [
-        _item(Icons.event, 'MANAGE EVENTS',
-            () { Get.back(); Get.toNamed(AppRouter.adminEvents); }),
-        _item(Icons.people, 'FIGHTER REGISTRATIONS',
-            () { Get.back(); Get.toNamed(AppRouter.fighterRegistrations); }),
-        _item(Icons.business, 'MANAGE GYMS',
-            () { Get.back(); Get.toNamed(AppRouter.gyms); }),
-        _item(Icons.assignment_turned_in, 'FIGHT CARDS',
-            () { Get.back(); Get.toNamed(AppRouter.fightCards); }),
-        _item(Icons.manage_accounts, 'MY PROFILE',
-            () { Get.back(); Get.toNamed(AppRouter.organizerManagement); }),
+        _drawerItem(Icons.emoji_events, 'TOURNAMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.tournamentManagement);
+        }),
+        _drawerItem(Icons.people, 'REGISTRATIONS', () {
+          Get.back(); Get.toNamed(AppRouter.organizerRegistrations);
+        }),
+        _drawerItem(Icons.business, 'CLUBS', () {
+          Get.back(); Get.toNamed(AppRouter.clubs);
+        }),
+        _drawerItem(Icons.manage_accounts, 'MY PROFILE', () {
+          Get.back(); Get.toNamed(AppRouter.organizerProfile);
+        }),
+      ]);
+
+  Widget _buildRefereeMenu() => Column(children: [
+        _drawerItem(Icons.sports_mma, 'UPCOMING FIGHTS', () {
+          Get.back(); Get.toNamed(AppRouter.refereeUpcoming);
+        }),
+        _drawerItem(Icons.assignment, 'SCORECARDS', () {
+          Get.back(); Get.toNamed(AppRouter.refereeScorecards);
+        }),
+        _drawerItem(Icons.history, 'MATCH HISTORY', () {
+          Get.back(); Get.toNamed(AppRouter.refereeHistory);
+        }),
       ]);
 
   Widget _buildAdminMenu() => Column(children: [
-        _item(Icons.people, 'ALL USERS',
-            () { Get.back(); Get.toNamed(AppRouter.users); }),
-        _item(Icons.admin_panel_settings, 'MANAGE ADMINS',
-            () { Get.back(); Get.toNamed(AppRouter.adminManagement); }),
-        _item(Icons.manage_accounts, 'MANAGE ORGANIZERS',
-            () { Get.back(); Get.toNamed(AppRouter.organizerManagement); }),
-        _item(Icons.verified_user, 'VERIFICATION',
-            () { Get.back(); Get.toNamed(AppRouter.verification); }),
-        _item(Icons.event, 'MANAGE EVENTS',
-            () { Get.back(); Get.toNamed(AppRouter.adminEvents); }),
-        _item(Icons.business, 'MANAGE GYMS',
-            () { Get.back(); Get.toNamed(AppRouter.gyms); }),
-        _item(Icons.analytics, 'STATISTICS',
-            () { Get.back(); Get.toNamed(AppRouter.statistics); }),
+        _drawerItem(Icons.emoji_events, 'TOURNAMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.tournamentManagement);
+        }),
+        _drawerItem(Icons.admin_panel_settings, 'MANAGE ADMINS', () {
+          Get.back(); Get.toNamed(AppRouter.adminManagement);
+        }),
+        _drawerItem(Icons.manage_accounts, 'MANAGE ORGANIZERS', () {
+          Get.back(); Get.toNamed(AppRouter.organizerManagement);
+        }),
+        _drawerItem(Icons.verified_user, 'VERIFICATION', () {
+          Get.back(); Get.toNamed(AppRouter.verification);
+        }),
+        _drawerItem(Icons.business, 'CLUBS', () {
+          Get.back(); Get.toNamed(AppRouter.clubs);
+        }),
+        _drawerItem(Icons.sports, 'SPORTS', () {
+          Get.back(); Get.toNamed(AppRouter.sports);
+        }),
+        _drawerItem(Icons.category, 'CATEGORIES', () {
+          Get.back(); Get.toNamed(AppRouter.categories);
+        }),
+        _drawerItem(Icons.people, 'ALL USERS', () {
+          Get.back(); Get.toNamed(AppRouter.users);
+        }),
+        _drawerItem(Icons.analytics, 'STATISTICS', () {
+          Get.back(); Get.toNamed(AppRouter.statistics);
+        }),
       ]);
 
-  // ── Dashboard content ───────────────────────────────────────────────────────
-
-  Widget _buildDashboardContent(User user) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Welcome card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE31837), Color(0xFFB8102E)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Welcome back,',
-                    style: TextStyle(
-                        color: Colors.white.withAlpha(204), fontSize: 14)),
-                const SizedBox(height: 4),
-                Text(user.fullName,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(51),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    user.role.displayName,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          const Text('QUICK ACTIONS',
-              style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1)),
-          const SizedBox(height: 12),
-
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.5,
-            children: [
-              _quickAction(Icons.event, 'Events',
-                  () => Get.toNamed(AppRouter.events)),
-              _quickAction(Icons.business, 'Gyms',
-                  () => Get.toNamed(AppRouter.gyms)),
-              _quickAction(Icons.people, 'Users',
-                  () => Get.toNamed(AppRouter.users)),
-              _quickAction(Icons.sports_mma, 'Fighters',
-                  () => Get.toNamed(AppRouter.fighters)),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-          const Text('RECENT ACTIVITY',
-              style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1)),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withAlpha(13),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withAlpha(26)),
-            ),
-            child: const Center(
-              child: Text('No recent activity',
-                  style: TextStyle(color: Colors.white54)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  Widget _item(IconData icon, String label, VoidCallback onTap,
+  Widget _drawerItem(IconData icon, String label, VoidCallback onTap,
       {bool isRed = false}) {
     return ListTile(
-      leading:
-          Icon(icon, color: isRed ? const Color(0xFFE31837) : Colors.white70),
-      title: Text(label,
-          style: TextStyle(
-              color: isRed ? const Color(0xFFE31837) : Colors.white,
-              fontWeight: FontWeight.w500)),
-      onTap: onTap,
-    );
-  }
-
-  Widget _quickAction(IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha(13),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withAlpha(26)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: const Color(0xFFE31837), size: 28),
-            const SizedBox(height: 8),
-            Text(label,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500)),
-          ],
-        ),
+      leading: Icon(icon,
+          color: isRed ? const Color(0xFFE31837) : Colors.white70),
+      title: Text(
+        label,
+        style: TextStyle(
+            color: isRed ? const Color(0xFFE31837) : Colors.white,
+            fontWeight: FontWeight.w500,
+            fontSize: 13),
       ),
+      onTap: onTap,
     );
   }
 
@@ -332,6 +283,8 @@ class DashboardView extends StatelessWidget {
         return Icons.sports_mma;
       case UserRole.COACH:
         return Icons.sports;
+      case UserRole.CLUB:
+        return Icons.business;
       case UserRole.ORGANIZER:
         return Icons.event;
       case UserRole.REFEREE:
@@ -349,10 +302,14 @@ class DashboardView extends StatelessWidget {
       Get.toNamed(AppRouter.fighterProfile);
     } else if (controller.isCoach()) {
       Get.toNamed(AppRouter.coachProfile);
+    } else if (controller.isClub()) {
+      Get.toNamed(AppRouter.clubSettings);
     } else if (controller.isOrganizer()) {
-      Get.toNamed(AppRouter.organizerManagement);
+      Get.toNamed(AppRouter.organizerProfile);
+    } else if (controller.isReferee()) {
+      Get.toNamed(AppRouter.refereeProfile);
     } else if (controller.isAdmin()) {
-      Get.toNamed(AppRouter.adminManagement);
+      Get.toNamed(AppRouter.adminProfile);
     }
   }
 }

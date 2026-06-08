@@ -7,12 +7,8 @@ import 'package:xfighter/modules/fighter/controllers/fighter_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Global controllers (available for the entire app lifetime)
   Get.put(AuthController(), permanent: true);
-  Get.put(FighterController(), permanent: true); // Ensure fighter controller is available for country fetching
-
-
+  Get.put(FighterController(), permanent: true);
   runApp(const XFighterApp());
 }
 

@@ -76,8 +76,7 @@ class ApiClient {
   Future<String?> getRefreshToken() =>
       _storage.read(key: AppConstants.refreshTokenKey);
 
-  Future<String?> getStoredRole() =>
-      _storage.read(key: AppConstants.roleKey);
+  Future<String?> getStoredRole() => _storage.read(key: AppConstants.roleKey);
 
   Future<String?> getStoredUserId() =>
       _storage.read(key: AppConstants.userIdKey);
@@ -105,8 +104,24 @@ class ApiClient {
     Map<String, dynamic>? data,
     Map<String, dynamic>? queryParams,
   }) async {
-    final response =
-        await _dio.put(path, data: data, queryParameters: queryParams);
+    final response = await _dio.put(
+      path,
+      data: data,
+      queryParameters: queryParams,
+    );
+    return _handle(response);
+  }
+
+  Future<Map<String, dynamic>> patch(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParams,
+  }) async {
+    final response = await _dio.patch(
+      path,
+      data: data,
+      queryParameters: queryParams,
+    );
     return _handle(response);
   }
 
@@ -173,7 +188,8 @@ class ApiClient {
     }
 
     final message = (body is Map<String, dynamic>)
-        ? (body['message'] ?? 'Request failed with status ${response.statusCode}')
+        ? (body['message'] ??
+              'Request failed with status ${response.statusCode}')
         : 'Request failed with status ${response.statusCode}';
 
     throw Exception(message);
