@@ -4,10 +4,12 @@ import 'package:xfighter/data/repositories/coach_repository.dart';
 import 'package:xfighter/data/models/coach_model.dart';
 import 'package:xfighter/data/models/fighter_model.dart';
 import 'package:xfighter/data/models/club_model.dart';
+import 'package:xfighter/data/repositories/user_lookup_repository.dart';
 import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
 
 class CoachController extends GetxController {
   final CoachRepository _coachRepository = CoachRepository();
+  final UserLookupRepository _lookup = UserLookupRepository();
   final AuthController _authController = Get.find<AuthController>();
 
   var myFighters = <Fighter>[].obs;
@@ -43,6 +45,18 @@ class CoachController extends GetxController {
   }
 
   // ── Fighter relationship ───────────────────────────────────────────────────
+
+  Future<void> requestTrainFighterByEmail(String fighterEmail) async {
+    isLoading.value = true;
+    try {
+      final fighterId = await _lookup.resolveFighterIdByEmail(fighterEmail);
+      await requestTrainFighter(fighterId);
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   Future<void> requestTrainFighter(String fighterId) async {
     isLoading.value = true;
@@ -85,6 +99,18 @@ class CoachController extends GetxController {
   }
 
   // ── Club membership ────────────────────────────────────────────────────────
+
+  Future<void> requestJoinClubByEmail(String clubEmail) async {
+    isLoading.value = true;
+    try {
+      final clubId = await _lookup.resolveClubIdByEmail(clubEmail);
+      await requestJoinClub(clubId);
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   Future<void> requestJoinClub(String clubId) async {
     isLoading.value = true;

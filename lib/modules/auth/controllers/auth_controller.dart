@@ -6,7 +6,7 @@ import 'package:xfighter/data/models/user_model.dart';
 import 'package:xfighter/data/models/country_model.dart';
 
 /// Roles available for self-registration via the public endpoints.
-enum RegisterRole { fighter, referee }
+enum RegisterRole { fighter, coach, referee }
 
 class AuthController extends GetxController with GetTickerProviderStateMixin {
   final AuthRepository _authRepository = AuthRepository();
@@ -24,12 +24,29 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
   var passwordError = ''.obs;
   var errorMessage = ''.obs;
 
-  // Registration role selector (tab index: 0=Fighter, 1=Referee)
+  // Registration role selector (tab index: 0=Fighter, 1=Coach, 2=Referee)
   var registerRoleIndex = 0.obs;
-  RegisterRole get registerRole =>
-      registerRoleIndex.value == 0 ? RegisterRole.fighter : RegisterRole.referee;
+  RegisterRole get registerRole {
+    switch (registerRoleIndex.value) {
+      case 1: return RegisterRole.coach;
+      case 2: return RegisterRole.referee;
+      default: return RegisterRole.fighter;
+    }
+  }
 
   late TabController registerTabController;
+
+  // Coach / referee shared professional fields
+  final licenseNumberController = TextEditingController();
+  final gradeController = TextEditingController();
+  final certificationLevelController = TextEditingController();
+  final yearsOfExperienceController = TextEditingController();
+  final totalMatchesOfficiatedController = TextEditingController();
+  final specializationController = TextEditingController();
+
+  // Fighter-specific
+  final birthDateController = TextEditingController();
+  var selectedGender = RxString('MALE');
 
   // ── Form controllers ───────────────────────────────────────────────────────
   final emailController = TextEditingController();
@@ -39,17 +56,13 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
   // Fighter-specific
   final categoryController = TextEditingController();
   final weightController = TextEditingController();
-  // Referee-specific
-  final licenseNumberController = TextEditingController();
-  final gradeController = TextEditingController();
-
   var obscurePassword = true.obs;
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   @override
   void onInit() {
     super.onInit();
-    registerTabController = TabController(length: 2, vsync: this);
+    registerTabController = TabController(length: 3, vsync: this);
     registerTabController.addListener(() {
       registerRoleIndex.value = registerTabController.index;
     });
@@ -68,6 +81,11 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
     weightController.dispose();
     licenseNumberController.dispose();
     gradeController.dispose();
+    certificationLevelController.dispose();
+    yearsOfExperienceController.dispose();
+    totalMatchesOfficiatedController.dispose();
+    specializationController.dispose();
+    birthDateController.dispose();
     super.onClose();
   }
 
@@ -188,6 +206,8 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
     try {
       if (registerRole == RegisterRole.fighter) {
         await _registerFighter();
+      } else if (registerRole == RegisterRole.coach) {
+        await _registerCoach();
       } else {
         await _registerReferee();
       }
@@ -212,28 +232,38 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
       'fullName': fullNameController.text.trim(),
       'phoneNumber': phoneController.text.isNotEmpty ? phoneController.text : null,
       'countryId': selectedCountryId.value,
-      'category': categoryController.text.isNotEmpty ? categoryController.text : null,
-      'weight': weightController.text.isNotEmpty
-          ? double.tryParse(weightController.text)
-          : null,
+      'category': categoryController.text.trim(),
+      'weight': double.parse(weightController.text.trim()),
+      'birthDate': birthDateController.text.trim(),
+      'gender': selectedGender.value,
     };
     await _authRepository.registerFighter(data);
   }
 
-  Future<void> _registerReferee() async {
-    final data = {
-      'email': emailController.text.trim(),
-      'password': passwordController.text,
-      'fullName': fullNameController.text.trim(),
-      'phoneNumber': phoneController.text.isNotEmpty ? phoneController.text : null,
-      'countryId': selectedCountryId.value,
-      'licenseNumber': licenseNumberController.text.isNotEmpty
-          ? licenseNumberController.text
-          : null,
-      'grade': gradeController.text.isNotEmpty ? gradeController.text : null,
-    };
-    await _authRepository.registerReferee(data);
+  Future<void> _registerCoach() async {
+    await _authRepository.registerCoach(_professionalRegistrationData());
   }
+
+  Future<void> _registerReferee() async {
+    await _authRepository.registerReferee(_professionalRegistrationData());
+  }
+
+  Map<String, dynamic> _professionalRegistrationData() => {
+        'email': emailController.text.trim(),
+        'password': passwordController.text,
+        'fullName': fullNameController.text.trim(),
+        'phoneNumber':
+            phoneController.text.isNotEmpty ? phoneController.text : null,
+        'countryId': selectedCountryId.value,
+        'licenseNumber': licenseNumberController.text.trim(),
+        'grade': gradeController.text.trim(),
+        'certificationLevel': certificationLevelController.text.trim(),
+        'yearsOfExperience':
+            int.parse(yearsOfExperienceController.text.trim()),
+        'totalMatchesOfficiated':
+            int.parse(totalMatchesOfficiatedController.text.trim()),
+        'specialization': specializationController.text.trim(),
+      };
 
   // ── Logout ────────────────────────────────────────────────────────────────
   Future<void> logout() async {
@@ -303,8 +333,42 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
           backgroundColor: Colors.red);
       return false;
     }
-    
-    // Clear errors if validation passes
+
+    if (registerRole == RegisterRole.fighter) {
+      if (categoryController.text.trim().isEmpty) {
+        _showSnackbar('Erreur', 'Veuillez entrer la catégorie (ex: Senior)',
+            backgroundColor: Colors.red);
+        return false;
+      }
+      if (double.tryParse(weightController.text.trim()) == null) {
+        _showSnackbar('Erreur', 'Veuillez entrer un poids valide (kg)',
+            backgroundColor: Colors.red);
+        return false;
+      }
+      if (birthDateController.text.trim().isEmpty) {
+        _showSnackbar('Erreur', 'Veuillez entrer votre date de naissance',
+            backgroundColor: Colors.red);
+        return false;
+      }
+    } else {
+      if (licenseNumberController.text.trim().isEmpty ||
+          gradeController.text.trim().isEmpty ||
+          certificationLevelController.text.trim().isEmpty ||
+          specializationController.text.trim().isEmpty) {
+        _showSnackbar('Erreur',
+            'Veuillez remplir tous les champs professionnels obligatoires',
+            backgroundColor: Colors.red);
+        return false;
+      }
+      if (int.tryParse(yearsOfExperienceController.text.trim()) == null ||
+          int.tryParse(totalMatchesOfficiatedController.text.trim()) == null) {
+        _showSnackbar('Erreur',
+            'Les années d\'expérience et les matchs doivent être des nombres',
+            backgroundColor: Colors.red);
+        return false;
+      }
+    }
+
     clearErrors();
     return true;
   }
@@ -318,9 +382,15 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
     weightController.clear();
     licenseNumberController.clear();
     gradeController.clear();
+    certificationLevelController.clear();
+    yearsOfExperienceController.clear();
+    totalMatchesOfficiatedController.clear();
+    specializationController.clear();
+    birthDateController.clear();
+    selectedGender.value = 'MALE';
     selectedCountryId.value = '';
     registerTabController.index = 0;
-    clearErrors(); // Clear errors when clearing form
+    clearErrors();
   }
 
   void _showSnackbar(String title, String message,
@@ -342,6 +412,11 @@ class AuthController extends GetxController with GetTickerProviderStateMixin {
   }
 
   // Legacy getters so old views that use selectedRole still compile
-  UserRole get selectedRoleValue =>
-      registerRole == RegisterRole.fighter ? UserRole.FIGHTER : UserRole.REFEREE;
+  UserRole get selectedRoleValue {
+    switch (registerRole) {
+      case RegisterRole.fighter: return UserRole.FIGHTER;
+      case RegisterRole.coach: return UserRole.COACH;
+      case RegisterRole.referee: return UserRole.REFEREE;
+    }
+  }
 }

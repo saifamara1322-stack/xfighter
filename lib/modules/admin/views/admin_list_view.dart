@@ -251,8 +251,41 @@ class _CreateAdminDialog extends GetView<AdminController> {
             const SizedBox(height: 12),
             _field(controller.cityController, 'City (optional)', Icons.location_city),
             const SizedBox(height: 12),
-            _field(controller.emailController, 'Country ID', Icons.flag,
-                hint: 'UUID of the country'),
+            Obx(() {
+              if (controller.countries.isEmpty) {
+                return const Text(
+                  'Loading countries…',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                );
+              }
+              return DropdownButtonFormField<String>(
+                dropdownColor: const Color(0xFF1A1A2E),
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Country *',
+                  labelStyle: const TextStyle(color: Colors.white60),
+                  prefixIcon: const Icon(Icons.flag, color: Colors.white54),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.white24),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFFE53935)),
+                  ),
+                ),
+                value: controller.selectedCountryId.value.isEmpty
+                    ? null
+                    : controller.selectedCountryId.value,
+                items: controller.countries
+                    .map((c) => DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name),
+                        ))
+                    .toList(),
+                onChanged: (v) => controller.selectedCountryId.value = v ?? '',
+              );
+            }),
           ],
         ),
       ),

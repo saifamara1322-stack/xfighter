@@ -13,10 +13,16 @@ import 'package:xfighter/modules/dashboard/views/dashboard_view.dart';
 // Fighter
 import 'package:xfighter/modules/fighter/bindings/fighter_binding.dart';
 import 'package:xfighter/modules/fighter/views/fighter_record_view.dart';
+import 'package:xfighter/modules/fighter/views/fighter_profile_view.dart';
 
 // Club
+import 'package:xfighter/modules/gym/views/club_details_view.dart';
 import 'package:xfighter/modules/gym/bindings/gym_binding.dart';
 import 'package:xfighter/modules/gym/views/gym_list_view.dart';
+import 'package:xfighter/modules/gym/views/club_fighters_view.dart';
+import 'package:xfighter/modules/gym/views/club_coaches_view.dart';
+import 'package:xfighter/modules/gym/views/club_invitations_view.dart';
+import 'package:xfighter/modules/gym/views/club_athletes_view.dart';
 
 // Users
 import 'package:xfighter/modules/users/bindings/user_binding.dart';
@@ -30,6 +36,7 @@ import 'package:xfighter/modules/event/views/event_list_view.dart';
 
 // Profile
 import 'package:xfighter/modules/profile/views/shared_profile_view.dart';
+import 'package:xfighter/modules/profile/views/documents_view.dart';
 
 // Coach
 import 'package:xfighter/modules/coach/bindings/coach_binding.dart';
@@ -41,14 +48,15 @@ import 'package:xfighter/modules/registration/views/coach_registrations_view.dar
 import 'package:xfighter/modules/registration/views/fighter_registrations_view.dart';
 import 'package:xfighter/modules/registration/views/organizer_registrations_view.dart';
 
-// Matchmaking
-import 'package:xfighter/modules/matchmaking/controllers/matchmaking_controller.dart';
-import 'package:xfighter/modules/matchmaking/views/fight_card_builder_view.dart';
+// Matchmaking removed — no fight-card endpoints in the API.
 
 // Admin
 import 'package:xfighter/modules/admin/bindings/admin_binding.dart';
 import 'package:xfighter/modules/admin/views/admin_detail_view.dart';
 import 'package:xfighter/modules/admin/views/admin_list_view.dart';
+import 'package:xfighter/modules/admin/views/sports_view.dart';
+import 'package:xfighter/modules/admin/views/categories_view.dart';
+import 'package:xfighter/modules/admin/views/countries_view.dart';
 
 // Organizer
 import 'package:xfighter/modules/organizer/bindings/organizer_binding.dart';
@@ -59,11 +67,29 @@ import 'package:xfighter/modules/organizer/views/organizer_list_view.dart';
 import 'package:xfighter/modules/verification/bindings/verification_binding.dart';
 import 'package:xfighter/modules/verification/views/verification_list_view.dart';
 
+// Dashboard stats
+import 'package:xfighter/modules/dashboard/views/statistics_view.dart';
+
+// ============================================================================
+// Helper: Argument / Parameter extractor (supports Map, String, direct param)
+// ============================================================================
+String _extractArgument(String key, {String defaultValue = ''}) {
+  if (Get.parameters.containsKey(key)) return Get.parameters[key]!;
+  final args = Get.arguments;
+  if (args is String) return args;
+  if (args is Map) {
+    final value = args[key];
+    if (value != null) return value.toString();
+  }
+  return defaultValue;
+}
+
+// ============================================================================
+// Role‑based Route Guard with User Feedback
+// ============================================================================
 class _RoleRouteGuard extends GetMiddleware {
-  _RoleRouteGuard({
-    required this.allowedRoles,
-    this.blockDisabledUsers = true,
-  }) : super(priority: 1);
+  _RoleRouteGuard({required this.allowedRoles, this.blockDisabledUsers = true})
+    : super(priority: 1);
 
   final Set<UserRole> allowedRoles;
   final bool blockDisabledUsers;
@@ -71,6 +97,7 @@ class _RoleRouteGuard extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) {
     if (!Get.isRegistered<AuthController>()) {
+      _showAccessMessage('Authentication service not ready. Please log in.');
       return const RouteSettings(name: AppRouter.login);
     }
 
@@ -78,21 +105,41 @@ class _RoleRouteGuard extends GetMiddleware {
     final user = authController.currentUser.value;
 
     if (!authController.isLoggedIn.value || user == null) {
+      _showAccessMessage('Please log in to continue.');
       return const RouteSettings(name: AppRouter.login);
     }
 
     if (blockDisabledUsers && user.status == UserStatus.DISABLED) {
+      _showAccessMessage('Your account has been disabled. Contact support.');
       return const RouteSettings(name: AppRouter.accessDenied);
     }
 
     if (allowedRoles.isNotEmpty && !allowedRoles.contains(user.role)) {
+      _showAccessMessage('You do not have permission to access this section.');
       return const RouteSettings(name: AppRouter.accessDenied);
     }
 
     return null;
   }
+
+  void _showAccessMessage(String message) {
+    // Use a micro delay to avoid showing snackbar during initial routing
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.context != null) {
+        GetSnackBar(
+          message: message,
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.red.shade900,
+          snackPosition: SnackPosition.BOTTOM,
+        ).show();
+      }
+    });
+  }
 }
 
+// ============================================================================
+// Placeholder Pages (for unfinished sections)
+// ============================================================================
 class _PlaceholderPage extends StatelessWidget {
   const _PlaceholderPage({
     required this.title,
@@ -106,25 +153,19 @@ class _PlaceholderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: const Color(0xFF0D0D1A),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(title: Text(title), elevation: 0),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: const Color(0xFFE31837)),
+            Icon(icon, size: 56, color: theme.primaryColor),
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
+              style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -132,7 +173,9 @@ class _PlaceholderPage extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: const TextStyle(color: Colors.white54),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.hintColor,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -148,37 +191,25 @@ class _AccessDeniedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
-      appBar: AppBar(
-        title: const Text('Access Denied'),
-        backgroundColor: const Color(0xFF0D0D1A),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(title: const Text('Access Denied'), elevation: 0),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.lock_outline,
-                color: Color(0xFFE31837),
-                size: 56,
-              ),
+              Icon(Icons.lock_outline, color: theme.primaryColor, size: 56),
               const SizedBox(height: 16),
               const Text(
-                'This workflow is not available for your role.',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+                'You do not have permission to view this page.',
+                style: TextStyle(fontSize: 16),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE31837),
-                  foregroundColor: Colors.white,
-                ),
                 onPressed: () => Get.offAllNamed(AppRouter.dashboard),
                 child: const Text('Back to Dashboard'),
               ),
@@ -190,6 +221,44 @@ class _AccessDeniedPage extends StatelessWidget {
   }
 }
 
+class _NotFoundPage extends StatelessWidget {
+  const _NotFoundPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(title: const Text('Page Not Found'), elevation: 0),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, color: theme.primaryColor, size: 56),
+              const SizedBox(height: 16),
+              const Text(
+                'The requested page does not exist.',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => Get.offAllNamed(AppRouter.dashboard),
+                child: const Text('Go to Dashboard'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Main Router Definition
+// ============================================================================
 class AppRouter {
   // Auth
   static const initial = '/';
@@ -199,6 +268,7 @@ class AppRouter {
   // Core
   static const dashboard = '/dashboard';
   static const accessDenied = '/access-denied';
+  static const notFound = '/404';
 
   // Profiles
   static const fighterProfile = '/fighter/profile';
@@ -213,28 +283,26 @@ class AppRouter {
   static const fighters = '/fighters';
   static const coachAthletes = '/coach/athletes';
   static const clubs = '/clubs';
-  static const clubDetail = '/clubs/:id';
+  static const clubDetail = '/clubs/:id'; // now points to ClubDetailView
   static const clubFighters = '/club/fighters';
   static const clubCoaches = '/club/coaches';
+  static const clubAthletes = '/club/athletes';
   static const clubInvitations = '/club/invitations';
 
-  // Tournaments map to /api/tournaments.
+  // Tournaments
   static const tournaments = '/tournaments';
   static const tournamentManagement = '/tournaments/manage';
   static const tournamentCreate = '/tournaments/create';
   static const tournamentDetail = '/tournaments/:id';
   static const tournamentRegistrations = '/tournaments/:id/registrations';
-  static const tournamentFightCard = '/tournaments/:id/fight-card';
 
-  // Legacy event routes kept so older UI/controller links remain valid.
+  // Legacy event routes (redirects or kept for compatibility)
   static const events = '/events';
-  static const eventDetail = tournamentDetail;
   static const legacyEventDetail = '/event/:id';
   static const adminEvents = '/admin-events';
-  static const createEvent = tournamentCreate;
   static const legacyCreateEvent = '/create-event';
 
-  // Registration workflows map to tournament registration endpoints.
+  // Registrations
   static const myRegistrations = '/registrations/me';
   static const pendingRegistrations = '/registrations/coach/pending';
   static const fighterRegistrations = '/registrations/fighter';
@@ -262,17 +330,14 @@ class AppRouter {
   static const legacyVerification = '/verification';
   static const documents = '/documents/me';
 
-  // Referee workflow placeholders.
-  static const refereeUpcoming = '/referee/upcoming';
-  static const refereeScorecards = '/referee/scorecards';
-  static const refereeHistory = '/referee/history';
+  // Referee workflows (tournaments + documents only — no scorecard API)
   static const refereeEvents = '/referee/events';
 
   // Misc
-  static const fightCards = '/fight-cards';
   static const settings = '/settings';
   static const statistics = '/statistics';
 
+  // Role sets
   static const Set<UserRole> authenticatedRoles = {
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
@@ -295,32 +360,26 @@ class AppRouter {
     UserRole.ORGANIZER,
   };
 
-  static const Set<UserRole> clubRoles = {
-    UserRole.CLUB,
-  };
+  static const Set<UserRole> clubRoles = {UserRole.CLUB};
 
-  static const Set<UserRole> coachRoles = {
-    UserRole.COACH,
-  };
+  static const Set<UserRole> coachRoles = {UserRole.COACH};
 
-  static const Set<UserRole> fighterRoles = {
+  static const Set<UserRole> fighterRoles = {UserRole.FIGHTER};
+
+  static const Set<UserRole> tournamentParticipantRoles = {
     UserRole.FIGHTER,
-  };
-
-  static const Set<UserRole> refereeRoles = {
+    UserRole.COACH,
+    UserRole.CLUB,
     UserRole.REFEREE,
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.ORGANIZER,
   };
 
-  static List<GetMiddleware> _guard(Set<UserRole> roles) {
-    return [_RoleRouteGuard(allowedRoles: roles)];
-  }
+  static const Set<UserRole> refereeRoles = {UserRole.REFEREE};
 
-  static String _argumentOrParam(String key) {
-    final argument = Get.arguments;
-    return Get.parameters[key] ?? (argument is String ? argument : '');
-  }
-
-  static GetPage _page({
+  // Helper to create a guarded page
+  static GetPage _guardedPage({
     required String name,
     required GetPageBuilder page,
     Set<UserRole> roles = authenticatedRoles,
@@ -330,86 +389,87 @@ class AppRouter {
       name: name,
       page: page,
       binding: binding,
-      middlewares: _guard(roles),
+      middlewares: [_RoleRouteGuard(allowedRoles: roles)],
     );
   }
 
+  // List of all routes
   static List<GetPage> pages = [
+    // Authentication routes (login, register, forgot, etc.)
     ...AuthRoutes.pages,
-    GetPage(
-      name: accessDenied,
-      page: () => const _AccessDeniedPage(),
-    ),
 
-    _page(
+    // Special system routes
+    GetPage(name: accessDenied, page: () => const _AccessDeniedPage()),
+    GetPage(name: notFound, page: () => const _NotFoundPage()),
+
+    // Dashboard
+    _guardedPage(
       name: dashboard,
       page: () => const DashboardView(),
       binding: DashboardBinding(),
     ),
 
-    // Fighter
-    _page(
+    // Fighter routes
+    _guardedPage(
       name: fighterProfile,
-      page: () => SharedProfileView(),
+      page: () => FighterProfileView(),
       roles: fighterRoles,
       binding: FighterBinding(),
     ),
-    _page(
+    // Legacy alias
+    _guardedPage(
       name: '/fighter-profile',
-      page: () => SharedProfileView(),
+      page: () => FighterProfileView(),
       roles: fighterRoles,
       binding: FighterBinding(),
     ),
-    _page(
+    _guardedPage(
       name: fighterRecord,
       page: () => const FighterRecordView(),
       roles: fighterRoles,
       binding: FighterBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/fighter-record',
       page: () => const FighterRecordView(),
       roles: fighterRoles,
       binding: FighterBinding(),
     ),
-    _page(
+    _guardedPage(
       name: fighters,
-      page: () => const _PlaceholderPage(
-        title: 'Fighters',
-        icon: Icons.sports_mma,
-      ),
-      roles: {...adminRoles, UserRole.CLUB, UserRole.COACH},
-      binding: FighterBinding(),
+      page: () => UserListView(),
+      roles: adminRoles,
+      binding: UserBinding(),
     ),
 
-    // Coach
-    _page(
+    // Coach routes
+    _guardedPage(
       name: coachProfile,
       page: () => SharedProfileView(),
       roles: coachRoles,
       binding: CoachBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/coach-profile',
       page: () => SharedProfileView(),
       roles: coachRoles,
       binding: CoachBinding(),
     ),
-    _page(
+    _guardedPage(
       name: coachAthletes,
       page: () => const CoachAthletesView(),
       roles: coachRoles,
       binding: CoachBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/coach-athletes',
       page: () => const CoachAthletesView(),
       roles: coachRoles,
       binding: CoachBinding(),
     ),
 
-    // Club
-    _page(
+    // Club routes
+    _guardedPage(
       name: clubs,
       page: () => const GymListView(),
       roles: {
@@ -417,10 +477,11 @@ class AppRouter {
         UserRole.ORGANIZER,
         UserRole.CLUB,
         UserRole.COACH,
+        UserRole.FIGHTER,
       },
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/gyms',
       page: () => const GymListView(),
       roles: {
@@ -428,454 +489,376 @@ class AppRouter {
         UserRole.ORGANIZER,
         UserRole.CLUB,
         UserRole.COACH,
+        UserRole.FIGHTER,
       },
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: clubDetail,
-      page: () => const GymListView(),
+      page: () => ClubDetailsView(clubId: _extractArgument('id')),
       roles: {
         ...adminRoles,
         UserRole.ORGANIZER,
         UserRole.CLUB,
         UserRole.COACH,
+        UserRole.FIGHTER,
       },
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/gym/:id',
-      page: () => const GymListView(),
+      page: () => ClubDetailsView(clubId: _extractArgument('id')),
       roles: {
         ...adminRoles,
         UserRole.ORGANIZER,
         UserRole.CLUB,
         UserRole.COACH,
+        UserRole.FIGHTER,
       },
       binding: GymBinding(),
     ),
-    _page(
+
+    _guardedPage(
       name: clubSettings,
       page: () => SharedProfileView(),
       roles: clubRoles,
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/club-settings',
       page: () => SharedProfileView(),
       roles: clubRoles,
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: clubFighters,
-      page: () => const _PlaceholderPage(
-        title: 'Club Fighters',
-        icon: Icons.sports_mma,
-      ),
+      page: () => const ClubFightersView(),
       roles: clubRoles,
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
+      name: clubAthletes,
+      page: () => const ClubAthletesView(),
+      roles: clubRoles,
+      binding: GymBinding(),
+    ),
+    _guardedPage(
       name: '/club-fighters',
-      page: () => const _PlaceholderPage(
-        title: 'Club Fighters',
-        icon: Icons.sports_mma,
-      ),
+      page: () => const ClubFightersView(),
       roles: clubRoles,
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: clubCoaches,
-      page: () => const _PlaceholderPage(
-        title: 'Club Coaches',
-        icon: Icons.sports,
-      ),
+      page: () => const ClubCoachesView(),
       roles: clubRoles,
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/club-coaches',
-      page: () => const _PlaceholderPage(
-        title: 'Club Coaches',
-        icon: Icons.sports,
-      ),
+      page: () => const ClubCoachesView(),
       roles: clubRoles,
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: clubInvitations,
-      page: () => const _PlaceholderPage(
-        title: 'Club Invitations',
-        icon: Icons.mail,
-      ),
+      page: () => const ClubInvitationsView(),
       roles: clubRoles,
       binding: GymBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/club-invitations',
-      page: () => const _PlaceholderPage(
-        title: 'Club Invitations',
-        icon: Icons.mail,
-      ),
+      page: () => const ClubInvitationsView(),
       roles: clubRoles,
       binding: GymBinding(),
     ),
 
-    // Tournaments
-    _page(
+    // Tournament (Event) routes
+    _guardedPage(
       name: tournaments,
       page: () => EventListView(),
+      roles: tournamentParticipantRoles,
       binding: EventBinding(),
     ),
-    _page(
-      name: events,
+    _guardedPage(
+      name: events, // legacy alias
       page: () => EventListView(),
       binding: EventBinding(),
     ),
-    _page(
+    _guardedPage(
       name: tournamentManagement,
       page: () => EventListView(),
       roles: tournamentManagerRoles,
       binding: EventBinding(),
     ),
-    _page(
+    _guardedPage(
       name: adminEvents,
       page: () => EventListView(),
       roles: tournamentManagerRoles,
       binding: EventBinding(),
     ),
-    _page(
+    _guardedPage(
       name: tournamentCreate,
       page: () => CreateEventView(),
       roles: tournamentManagerRoles,
       binding: EventBinding(),
     ),
-    _page(
+    _guardedPage(
       name: legacyCreateEvent,
       page: () => CreateEventView(),
       roles: tournamentManagerRoles,
       binding: EventBinding(),
     ),
-    _page(
+    _guardedPage(
       name: tournamentRegistrations,
       page: () => OrganizerRegistrationsView(),
       roles: tournamentManagerRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
-      name: tournamentFightCard,
-      page: () => FightCardBuilderView(
-        eventId: Get.parameters['id'] ?? '',
-        eventName: Get.parameters['name'] ?? 'Fight Card',
-      ),
-      roles: tournamentManagerRoles,
-      binding: BindingsBuilder(() {
-        Get.lazyPut(() => MatchmakingController());
-      }),
-    ),
-    _page(
+    _guardedPage(
       name: tournamentDetail,
-      page: () => EventDetailView(eventId: Get.parameters['id'] ?? ''),
+      page: () => EventDetailView(eventId: _extractArgument('id')),
+      roles: tournamentParticipantRoles,
       binding: EventBinding(),
     ),
-    _page(
+    _guardedPage(
       name: legacyEventDetail,
-      page: () => EventDetailView(eventId: Get.parameters['id'] ?? ''),
+      page: () => EventDetailView(eventId: _extractArgument('id')),
+      roles: tournamentParticipantRoles,
       binding: EventBinding(),
     ),
 
-    // Registrations
-    _page(
+    // Registration workflows
+    _guardedPage(
       name: myRegistrations,
       page: () => FighterRegistrationsView(),
       roles: fighterRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/my-registrations',
       page: () => FighterRegistrationsView(),
       roles: fighterRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: pendingRegistrations,
       page: () => CoachRegistrationsView(),
       roles: coachRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/pending-registrations',
       page: () => CoachRegistrationsView(),
       roles: coachRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: fighterRegistrations,
       page: () => FighterRegistrationsView(),
       roles: fighterRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/fighter-registrations',
       page: () => OrganizerRegistrationsView(),
       roles: tournamentManagerRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: coachRegistrations,
       page: () => CoachRegistrationsView(),
       roles: coachRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/coach-registrations',
       page: () => CoachRegistrationsView(),
       roles: coachRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: organizerRegistrations,
       page: () => OrganizerRegistrationsView(),
       roles: tournamentManagerRoles,
       binding: RegistrationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/organizer-registrations',
       page: () => OrganizerRegistrationsView(),
       roles: tournamentManagerRoles,
       binding: RegistrationBinding(),
     ),
 
-    // Master data
-    _page(
+    // Master data (admin only)
+    _guardedPage(
       name: sports,
-      page: () => const _PlaceholderPage(
-        title: 'Sports',
-        icon: Icons.sports,
-      ),
+      page: () => const SportsView(),
       roles: adminRoles,
     ),
-    _page(
+    _guardedPage(
       name: categories,
-      page: () => const _PlaceholderPage(
-        title: 'Categories',
-        icon: Icons.category,
-      ),
+      page: () => const CategoriesView(),
       roles: adminRoles,
     ),
-    _page(
+    _guardedPage(
       name: countries,
-      page: () => const _PlaceholderPage(
-        title: 'Countries',
-        icon: Icons.flag,
-      ),
+      page: () => const CountriesView(),
       roles: adminRoles,
     ),
 
-    // Users / admin
-    _page(
+    // User & admin management
+    _guardedPage(
       name: users,
       page: () => UserListView(),
       roles: adminRoles,
       binding: UserBinding(),
     ),
-    _page(
+    _guardedPage(
       name: adminManagement,
       page: () => const AdminListView(),
       roles: adminRoles,
       binding: AdminBinding(),
     ),
-    _page(
+    _guardedPage(
       name: legacyAdminManagement,
       page: () => const AdminListView(),
       roles: adminRoles,
       binding: AdminBinding(),
     ),
-    _page(
+    _guardedPage(
       name: adminDetail,
-      page: () => AdminDetailView(adminId: _argumentOrParam('id')),
+      page: () => AdminDetailView(adminId: _extractArgument('id')),
       roles: adminRoles,
       binding: AdminBinding(),
     ),
-    _page(
+    _guardedPage(
       name: legacyAdminDetail,
-      page: () => AdminDetailView(adminId: _argumentOrParam('id')),
+      page: () => AdminDetailView(adminId: _extractArgument('id')),
       roles: adminRoles,
       binding: AdminBinding(),
     ),
-    _page(
+    _guardedPage(
       name: adminProfile,
       page: () => SharedProfileView(),
       roles: adminRoles,
       binding: AdminBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/admin-profile',
       page: () => SharedProfileView(),
       roles: adminRoles,
       binding: AdminBinding(),
     ),
 
-    // Organizers
-    _page(
+    // Organizer management
+    _guardedPage(
       name: organizerManagement,
       page: () => const OrganizerListView(),
       roles: adminRoles,
       binding: OrganizerBinding(),
     ),
-    _page(
+    _guardedPage(
       name: legacyOrganizerManagement,
       page: () => const OrganizerListView(),
       roles: adminRoles,
       binding: OrganizerBinding(),
     ),
-    _page(
+    _guardedPage(
       name: organizerDetail,
-      page: () => OrganizerDetailView(organizerId: _argumentOrParam('id')),
+      page: () => OrganizerDetailView(organizerId: _extractArgument('id')),
       roles: adminRoles,
       binding: OrganizerBinding(),
     ),
-    _page(
+    _guardedPage(
       name: legacyOrganizerDetail,
-      page: () => OrganizerDetailView(organizerId: _argumentOrParam('id')),
+      page: () => OrganizerDetailView(organizerId: _extractArgument('id')),
       roles: adminRoles,
       binding: OrganizerBinding(),
     ),
-    _page(
+    _guardedPage(
       name: organizerProfile,
       page: () => SharedProfileView(),
       roles: {UserRole.ORGANIZER},
       binding: OrganizerBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/organizer-profile',
       page: () => SharedProfileView(),
       roles: {UserRole.ORGANIZER},
       binding: OrganizerBinding(),
     ),
 
-    // Verification / documents
-    _page(
+    // Verification & documents
+    _guardedPage(
       name: verification,
       page: () => const VerificationListView(),
       roles: adminRoles,
       binding: VerificationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: legacyVerification,
       page: () => const VerificationListView(),
       roles: adminRoles,
       binding: VerificationBinding(),
     ),
-    _page(
+    _guardedPage(
       name: documents,
-      page: () => const _PlaceholderPage(
-        title: 'Documents',
-        icon: Icons.description,
-      ),
-      roles: {
-        UserRole.FIGHTER,
-        UserRole.REFEREE,
-        UserRole.CLUB,
-      },
+      page: () => const DocumentsView(),
+      roles: {UserRole.FIGHTER, UserRole.REFEREE, UserRole.COACH},
     ),
 
-    // Referee
-    _page(
+    // Referee workflows
+    _guardedPage(
       name: refereeProfile,
       page: () => SharedProfileView(),
       roles: refereeRoles,
     ),
-    _page(
+    _guardedPage(
       name: '/referee-profile',
       page: () => SharedProfileView(),
       roles: refereeRoles,
     ),
-    _page(
-      name: refereeUpcoming,
-      page: () => const _PlaceholderPage(
-        title: 'Upcoming Fights',
-        icon: Icons.sports_mma,
-      ),
-      roles: refereeRoles,
-    ),
-    _page(
-      name: '/referee-upcoming',
-      page: () => const _PlaceholderPage(
-        title: 'Upcoming Fights',
-        icon: Icons.sports_mma,
-      ),
-      roles: refereeRoles,
-    ),
-    _page(
-      name: refereeScorecards,
-      page: () => const _PlaceholderPage(
-        title: 'Scorecards',
-        icon: Icons.assignment,
-      ),
-      roles: refereeRoles,
-    ),
-    _page(
-      name: '/referee-scorecards',
-      page: () => const _PlaceholderPage(
-        title: 'Scorecards',
-        icon: Icons.assignment,
-      ),
-      roles: refereeRoles,
-    ),
-    _page(
-      name: refereeHistory,
-      page: () => const _PlaceholderPage(
-        title: 'Match History',
-        icon: Icons.history,
-      ),
-      roles: refereeRoles,
-    ),
-    _page(
-      name: '/referee-history',
-      page: () => const _PlaceholderPage(
-        title: 'Match History',
-        icon: Icons.history,
-      ),
-      roles: refereeRoles,
-    ),
-    _page(
+    _guardedPage(
       name: refereeEvents,
       page: () => EventListView(),
       roles: refereeRoles,
       binding: EventBinding(),
     ),
-    _page(
+    _guardedPage(
       name: '/referee-events',
       page: () => EventListView(),
       roles: refereeRoles,
       binding: EventBinding(),
     ),
+    // Legacy referee routes redirect to tournaments
+    _guardedPage(
+      name: '/referee-upcoming',
+      page: () => EventListView(),
+      roles: refereeRoles,
+      binding: EventBinding(),
+    ),
+    _guardedPage(
+      name: '/referee-scorecards',
+      page: () => const DocumentsView(),
+      roles: refereeRoles,
+    ),
+    _guardedPage(
+      name: '/referee-history',
+      page: () => EventListView(),
+      roles: refereeRoles,
+      binding: EventBinding(),
+    ),
 
-    // Fight cards / misc
-    _page(
-      name: fightCards,
-      page: () => FightCardBuilderView(
-        eventId: Get.parameters['id'] ?? '',
-        eventName: Get.parameters['name'] ?? 'Fight Card',
-      ),
-      roles: tournamentManagerRoles,
-      binding: BindingsBuilder(() {
-        Get.lazyPut(() => MatchmakingController());
-      }),
-    ),
-    _page(
+    // Miscellaneous
+    _guardedPage(
       name: settings,
-      page: () => const _PlaceholderPage(
-        title: 'Settings',
-        icon: Icons.settings,
-      ),
+      page: () =>
+          const _PlaceholderPage(title: 'Settings', icon: Icons.settings),
     ),
-    _page(
+    _guardedPage(
       name: statistics,
-      page: () => const _PlaceholderPage(
-        title: 'Statistics',
-        icon: Icons.analytics,
-      ),
+      page: () => const StatisticsView(),
       roles: adminRoles,
     ),
   ];

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Summary sub-objects (used inside FighterProfileResponse)
+// Summary sub-objects (used inside Fighter)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class ClubSummary {
@@ -51,7 +51,7 @@ class CoachSummary {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FighterProfileResponse  (matches API #/components/schemas/FighterProfileResponse)
+// Fighter (matches API #/components/schemas/FighterProfileResponse)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class Fighter {
@@ -61,6 +61,9 @@ class Fighter {
   final String? phoneNumber;
   final String? category;
   final double? weight;
+  final String? birthDate;   // added
+  final int? age;            // added
+  final String? gender;      // added
   final ClubSummary? club;
   final CoachSummary? coach;
 
@@ -71,6 +74,9 @@ class Fighter {
     this.phoneNumber,
     this.category,
     this.weight,
+    this.birthDate,
+    this.age,
+    this.gender,
     this.club,
     this.coach,
   });
@@ -82,6 +88,9 @@ class Fighter {
         phoneNumber: json['phoneNumber'],
         category: json['category'],
         weight: (json['weight'] as num?)?.toDouble(),
+        birthDate: json['birthDate'],
+        age: json['age'],
+        gender: json['gender'],
         club: json['club'] != null
             ? ClubSummary.fromJson(json['club'] as Map<String, dynamic>)
             : null,
@@ -97,13 +106,16 @@ class Fighter {
         'phoneNumber': phoneNumber,
         'category': category,
         'weight': weight,
+        'birthDate': birthDate,
+        'age': age,
+        'gender': gender,
         'club': club?.toJson(),
         'coach': coach?.toJson(),
       };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CreateFighterRequest  (matches API #/components/schemas/CreateFighterRequest)
+// CreateFighterRequest (matches API #/components/schemas/CreateFighterRequest)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class CreateFighterRequest {
@@ -143,7 +155,7 @@ class CreateFighterRequest {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Utility: Weight categories & fight disciplines
+// Utility: Weight categories & fight disciplines (optional, keep as is)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class WeightClass {

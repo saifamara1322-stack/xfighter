@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:xfighter/modules/gym/views/gym_list_view.dart';
+import 'package:xfighter/modules/gym/views/club_details_view.dart';
 import 'package:xfighter/modules/gym/bindings/gym_binding.dart';
 
 class GymRoutes {
@@ -12,10 +13,9 @@ class GymRoutes {
       page: () => const GymListView(),
       binding: GymBinding(),
     ),
-    // Club detail view is not yet implemented; routing to list as fallback
     GetPage(
       name: gymDetail,
-      page: () => const GymListView(),
+      page: () => ClubDetailsView(clubId: Get.parameters['id'] ?? ''),
       binding: GymBinding(),
     ),
   ];

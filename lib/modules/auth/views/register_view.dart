@@ -160,9 +160,11 @@ class RegisterView extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // ── Role-specific fields ──────────────────────────────────
-                Obx(() => c.registerRoleIndex.value == 0
-                    ? _FighterFields(controller: c)
-                    : _RefereeFields(controller: c)),
+                Obx(() {
+                  if (c.registerRoleIndex.value == 1) return _CoachFields(controller: c);
+                  if (c.registerRoleIndex.value == 2) return _RefereeFields(controller: c);
+                  return _FighterFields(controller: c);
+                }),
 
                 const SizedBox(height: 24),
 
@@ -268,9 +270,9 @@ class _RoleTabBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('🥊', style: TextStyle(fontSize: 16)),
-                SizedBox(width: 8),
-                Text('FIGHTER'),
+                Text('🥊', style: TextStyle(fontSize: 14)),
+                SizedBox(width: 4),
+                Text('FIGHTER', style: TextStyle(fontSize: 11)),
               ],
             ),
           ),
@@ -278,9 +280,19 @@ class _RoleTabBar extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('🛡️', style: TextStyle(fontSize: 16)),
-                SizedBox(width: 8),
-                Text('REFEREE'),
+                Text('🏋️', style: TextStyle(fontSize: 14)),
+                SizedBox(width: 4),
+                Text('COACH', style: TextStyle(fontSize: 11)),
+              ],
+            ),
+          ),
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('🛡️', style: TextStyle(fontSize: 14)),
+                SizedBox(width: 4),
+                Text('REFEREE', style: TextStyle(fontSize: 11)),
               ],
             ),
           ),
@@ -298,6 +310,8 @@ class _FighterFields extends StatelessWidget {
   final AuthController controller;
   const _FighterFields({required this.controller});
 
+  static const _red = Color(0xFFE31837);
+
   @override
   Widget build(BuildContext context) {
     return _Card(
@@ -308,22 +322,73 @@ class _FighterFields extends StatelessWidget {
           const SizedBox(height: 16),
           _Field(
             controller: controller.categoryController,
-            label: 'WEIGHT CATEGORY',
-            hint: 'e.g. Lightweight, Welterweight',
+            label: 'AGE CATEGORY',
+            hint: 'e.g. Senior, Junior',
             icon: Icons.category_outlined,
           ),
           const SizedBox(height: 16),
           _Field(
             controller: controller.weightController,
             label: 'WEIGHT (kg)',
-            hint: 'e.g. 77.5',
+            hint: 'e.g. 68.5',
             icon: Icons.monitor_weight_outlined,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 16),
+          _Field(
+            controller: controller.birthDateController,
+            label: 'BIRTH DATE',
+            hint: 'YYYY-MM-DD',
+            icon: Icons.cake_outlined,
+          ),
+          const SizedBox(height: 16),
+          Obx(() => DropdownButtonFormField<String>(
+                value: controller.selectedGender.value,
+                dropdownColor: Colors.grey[900],
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'GENDER',
+                  labelStyle: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1),
+                  prefixIcon:
+                      const Icon(Icons.wc_outlined, color: _red, size: 20),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        BorderSide(color: Colors.white.withOpacity(0.15)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: _red, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: Colors.black.withOpacity(0.3),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'MALE', child: Text('Male')),
+                  DropdownMenuItem(value: 'FEMALE', child: Text('Female')),
+                ],
+                onChanged: (v) {
+                  if (v != null) controller.selectedGender.value = v;
+                },
+              )),
         ],
       ),
     );
+  }
+}
+
+class _CoachFields extends StatelessWidget {
+  final AuthController controller;
+  const _CoachFields({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ProfessionalFields(controller: controller, title: 'COACH DETAILS');
   }
 }
 
@@ -333,24 +398,65 @@ class _RefereeFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _ProfessionalFields(controller: controller, title: 'REFEREE DETAILS');
+  }
+}
+
+class _ProfessionalFields extends StatelessWidget {
+  final AuthController controller;
+  final String title;
+  const _ProfessionalFields({required this.controller, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionLabel('REFEREE DETAILS'),
+          _SectionLabel(title),
           const SizedBox(height: 16),
           _Field(
             controller: controller.licenseNumberController,
             label: 'LICENSE NUMBER',
-            hint: 'Optional',
+            hint: 'e.g. COACH-12345',
             icon: Icons.badge_outlined,
           ),
           const SizedBox(height: 16),
           _Field(
             controller: controller.gradeController,
-            label: 'GRADE / CERTIFICATION',
-            hint: 'Optional',
+            label: 'GRADE',
+            hint: 'e.g. A, B',
             icon: Icons.grade_outlined,
+          ),
+          const SizedBox(height: 16),
+          _Field(
+            controller: controller.certificationLevelController,
+            label: 'CERTIFICATION LEVEL',
+            hint: 'e.g. National, Regional',
+            icon: Icons.workspace_premium_outlined,
+          ),
+          const SizedBox(height: 16),
+          _Field(
+            controller: controller.specializationController,
+            label: 'SPECIALIZATION',
+            hint: 'e.g. MMA, Boxing',
+            icon: Icons.sports_outlined,
+          ),
+          const SizedBox(height: 16),
+          _Field(
+            controller: controller.yearsOfExperienceController,
+            label: 'YEARS OF EXPERIENCE',
+            hint: 'e.g. 5',
+            icon: Icons.star_outline,
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          _Field(
+            controller: controller.totalMatchesOfficiatedController,
+            label: 'TOTAL MATCHES OFFICIATED',
+            hint: 'e.g. 50',
+            icon: Icons.sports_score_outlined,
+            keyboardType: TextInputType.number,
           ),
         ],
       ),

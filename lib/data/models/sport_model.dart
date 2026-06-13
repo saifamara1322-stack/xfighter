@@ -7,12 +7,14 @@
 class Sport {
   final String id;
   final String name;
+  final String? code;
   final String? description;
   final DateTime? createdAt;
 
   const Sport({
     required this.id,
     required this.name,
+    this.code,
     this.description,
     this.createdAt,
   });
@@ -20,6 +22,7 @@ class Sport {
   factory Sport.fromJson(Map<String, dynamic> json) => Sport(
         id: json['id']?.toString() ?? '',
         name: json['name'] ?? '',
+        code: json['code']?.toString(),
         description: json['description'],
         createdAt: json['createdAt'] != null
             ? DateTime.tryParse(json['createdAt'])
@@ -29,6 +32,7 @@ class Sport {
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
+        if (code != null) 'code': code,
         'description': description,
         'createdAt': createdAt?.toIso8601String(),
       };
@@ -38,12 +42,14 @@ class Sport {
 
 class CreateSportRequest {
   final String name;
+  final String? code;
   final String? description;
 
-  const CreateSportRequest({required this.name, this.description});
+  const CreateSportRequest({required this.name, this.code, this.description});
 
   Map<String, dynamic> toJson() => {
         'name': name,
+        if (code != null) 'code': code,
         if (description != null) 'description': description,
       };
 }

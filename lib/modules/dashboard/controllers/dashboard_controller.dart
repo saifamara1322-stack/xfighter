@@ -8,11 +8,11 @@ import 'package:xfighter/data/repositories/admin_repository.dart';
 import 'package:xfighter/data/repositories/verification_repository.dart';
 import 'package:xfighter/modules/profile/views/shared_profile_view.dart';
 import 'package:xfighter/modules/event/views/event_list_view.dart';
-import 'package:xfighter/modules/registration/views/fighter_registrations_view.dart';
-import 'package:xfighter/modules/registration/views/coach_registrations_view.dart';
 import 'package:xfighter/modules/registration/views/organizer_registrations_view.dart';
 import 'package:xfighter/modules/fighter/views/fighter_record_view.dart';
 import 'package:xfighter/modules/coach/views/coach_athletes_view.dart';
+import 'package:xfighter/modules/gym/views/club_athletes_view.dart';
+import 'package:xfighter/modules/profile/views/documents_view.dart';
 
 class DashboardController extends GetxController {
   final AuthRepository _authRepository = AuthRepository();
@@ -100,16 +100,16 @@ class DashboardController extends GetxController {
       case UserRole.FIGHTER:
         items.addAll([
           const BottomNavigationBarItem(
-              icon: Icon(Icons.fitness_center), label: 'My Record'),
+              icon: Icon(Icons.person), label: 'Profile'),
           const BottomNavigationBarItem(
               icon: Icon(Icons.event), label: 'Tournaments'),
           const BottomNavigationBarItem(
-              icon: Icon(Icons.person), label: 'Profile'),
+              icon: Icon(Icons.description), label: 'Documents'),
         ]);
         pages.addAll([
           const FighterRecordView(),
           EventListView(),
-          SharedProfileView(),
+          const DocumentsView(),
         ]);
         break;
 
@@ -118,16 +118,16 @@ class DashboardController extends GetxController {
           const BottomNavigationBarItem(
               icon: Icon(Icons.people), label: 'Athletes'),
           const BottomNavigationBarItem(
-              icon: Icon(Icons.event), label: 'Events'),
+              icon: Icon(Icons.event), label: 'Tournaments'),
           const BottomNavigationBarItem(
-              icon: Icon(Icons.assignment_turned_in), label: 'Registrations'),
+              icon: Icon(Icons.description), label: 'Documents'),
           const BottomNavigationBarItem(
               icon: Icon(Icons.person), label: 'Profile'),
         ]);
         pages.addAll([
           const CoachAthletesView(),
           EventListView(),
-          CoachRegistrationsView(),
+          const DocumentsView(),
           SharedProfileView(),
         ]);
         break;
@@ -135,15 +135,12 @@ class DashboardController extends GetxController {
       case UserRole.CLUB:
         items.addAll([
           const BottomNavigationBarItem(
-              icon: Icon(Icons.sports_mma), label: 'Fighters'),
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.sports), label: 'Coaches'),
+              icon: Icon(Icons.groups), label: 'Athletes'),
           const BottomNavigationBarItem(
               icon: Icon(Icons.settings), label: 'Club'),
         ]);
         pages.addAll([
-          const ClubFightersTab(),
-          const ClubCoachesTab(),
+          const ClubAthletesView(),
           SharedProfileView(),
         ]);
         break;
@@ -167,15 +164,15 @@ class DashboardController extends GetxController {
       case UserRole.REFEREE:
         items.addAll([
           const BottomNavigationBarItem(
-              icon: Icon(Icons.sports_mma), label: 'Upcoming'),
+              icon: Icon(Icons.event), label: 'Tournaments'),
           const BottomNavigationBarItem(
-              icon: Icon(Icons.assignment), label: 'Scorecards'),
+              icon: Icon(Icons.description), label: 'Documents'),
           const BottomNavigationBarItem(
               icon: Icon(Icons.person), label: 'Profile'),
         ]);
         pages.addAll([
-          const RefereeUpcomingTab(),
-          const RefereeScorecardsTab(),
+          EventListView(),
+          const DocumentsView(),
           SharedProfileView(),
         ]);
         break;
@@ -412,18 +409,18 @@ class HomeTab extends StatelessWidget {
     switch (role) {
       case UserRole.FIGHTER:
         actions = [
-          {'icon': Icons.fitness_center, 'label': 'My Record', 'route': '/fighter-record'},
+          {'icon': Icons.person, 'label': 'My Profile', 'route': '/fighter-record'},
           {'icon': Icons.emoji_events, 'label': 'Tournaments', 'route': '/events'},
           {'icon': Icons.assignment_turned_in, 'label': 'My Registrations', 'route': '/my-registrations'},
-          {'icon': Icons.person, 'label': 'Profile', 'route': '/fighter-profile'},
+          {'icon': Icons.description, 'label': 'Documents', 'route': '/documents/me'},
         ];
         break;
       case UserRole.COACH:
         actions = [
           {'icon': Icons.people, 'label': 'My Athletes', 'route': '/coach-athletes'},
           {'icon': Icons.emoji_events, 'label': 'Tournaments', 'route': '/events'},
-          {'icon': Icons.business, 'label': 'Manage Clubs', 'route': '/gyms'},
-          {'icon': Icons.assignment_turned_in, 'label': 'Registrations', 'route': '/pending-registrations'},
+          {'icon': Icons.business, 'label': 'My Clubs', 'route': '/gyms'},
+          {'icon': Icons.description, 'label': 'Documents', 'route': '/documents/me'},
         ];
         break;
       case UserRole.CLUB:
@@ -446,10 +443,9 @@ class HomeTab extends StatelessWidget {
         break;
       case UserRole.REFEREE:
         actions = [
-          {'icon': Icons.sports_mma, 'label': 'Upcoming Fights', 'route': '/referee-upcoming'},
-          {'icon': Icons.assignment, 'label': 'Scorecards', 'route': '/referee-scorecards'},
-          {'icon': Icons.history, 'label': 'Match History', 'route': '/referee-history'},
-          {'icon': Icons.event, 'label': 'Assigned Events', 'route': '/referee-events'},
+          {'icon': Icons.emoji_events, 'label': 'Tournaments', 'route': '/events'},
+          {'icon': Icons.description, 'label': 'Documents', 'route': '/documents/me'},
+          {'icon': Icons.person, 'label': 'Profile', 'route': '/referee-profile'},
         ];
         break;
       case UserRole.ADMIN:
@@ -463,7 +459,9 @@ class HomeTab extends StatelessWidget {
           {'icon': Icons.business, 'label': 'Clubs', 'route': '/gyms'},
           {'icon': Icons.sports, 'label': 'Sports', 'route': '/sports'},
           {'icon': Icons.category, 'label': 'Categories', 'route': '/categories'},
-          {'icon': Icons.flag, 'label': 'Countries', 'route': '/users'},
+          {'icon': Icons.flag, 'label': 'Countries', 'route': '/countries'},
+          {'icon': Icons.people, 'label': 'All Users', 'route': '/users'},
+          {'icon': Icons.analytics, 'label': 'Statistics', 'route': '/statistics'},
         ];
     }
 

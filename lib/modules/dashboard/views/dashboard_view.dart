@@ -163,7 +163,7 @@ class DashboardView extends StatelessWidget {
   }
 
   Widget _buildFighterMenu() => Column(children: [
-        _drawerItem(Icons.fitness_center, 'MY RECORD', () {
+        _drawerItem(Icons.person, 'MY PROFILE', () {
           Get.back(); Get.toNamed(AppRouter.fighterRecord);
         }),
         _drawerItem(Icons.emoji_events, 'TOURNAMENTS', () {
@@ -171,6 +171,9 @@ class DashboardView extends StatelessWidget {
         }),
         _drawerItem(Icons.assignment_turned_in, 'MY REGISTRATIONS', () {
           Get.back(); Get.toNamed(AppRouter.myRegistrations);
+        }),
+        _drawerItem(Icons.description, 'DOCUMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.documents);
         }),
       ]);
 
@@ -181,8 +184,11 @@ class DashboardView extends StatelessWidget {
         _drawerItem(Icons.emoji_events, 'TOURNAMENTS', () {
           Get.back(); Get.toNamed(AppRouter.tournaments);
         }),
-        _drawerItem(Icons.business, 'CLUBS', () {
+        _drawerItem(Icons.business, 'MY CLUBS', () {
           Get.back(); Get.toNamed(AppRouter.clubs);
+        }),
+        _drawerItem(Icons.description, 'DOCUMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.documents);
         }),
       ]);
 
@@ -220,14 +226,14 @@ class DashboardView extends StatelessWidget {
       ]);
 
   Widget _buildRefereeMenu() => Column(children: [
-        _drawerItem(Icons.sports_mma, 'UPCOMING FIGHTS', () {
-          Get.back(); Get.toNamed(AppRouter.refereeUpcoming);
+        _drawerItem(Icons.emoji_events, 'TOURNAMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.tournaments);
         }),
-        _drawerItem(Icons.assignment, 'SCORECARDS', () {
-          Get.back(); Get.toNamed(AppRouter.refereeScorecards);
+        _drawerItem(Icons.description, 'DOCUMENTS', () {
+          Get.back(); Get.toNamed(AppRouter.documents);
         }),
-        _drawerItem(Icons.history, 'MATCH HISTORY', () {
-          Get.back(); Get.toNamed(AppRouter.refereeHistory);
+        _drawerItem(Icons.person, 'MY PROFILE', () {
+          Get.back(); Get.toNamed(AppRouter.refereeProfile);
         }),
       ]);
 
@@ -252,6 +258,9 @@ class DashboardView extends StatelessWidget {
         }),
         _drawerItem(Icons.category, 'CATEGORIES', () {
           Get.back(); Get.toNamed(AppRouter.categories);
+        }),
+        _drawerItem(Icons.flag, 'COUNTRIES', () {
+          Get.back(); Get.toNamed(AppRouter.countries);
         }),
         _drawerItem(Icons.people, 'ALL USERS', () {
           Get.back(); Get.toNamed(AppRouter.users);

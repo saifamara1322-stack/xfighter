@@ -1,0 +1,4158 @@
+{
+  "info": {
+    "_postman_id": "3dae5a20-5662-478c-a546-f41a97ce8223",
+    "name": "X-Fighter API",
+    "description": "MMA Fighter Management System - REST API Documentation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "15120195"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"organizer@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate user with email and password. Returns JWT access token and refresh token."
+          },
+          "response": []
+        },
+        {
+          "name": "Register Fighter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"fighter1@test.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Ahmed Fighter\",\n  \"phoneNumber\": \"+21600000000\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"category\": \"Senior\",\n  \"weight\": 68.5,\n  \"birthDate\": \"2001-05-20\",\n  \"gender\": \"MALE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register-fighter",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register-fighter"
+              ]
+            },
+            "description": "Register a new fighter with required documents (ID Card, Medical Certificate, Federal License). Account will be in PENDING status awaiting verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Register Referee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"referee@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"John Referee\",\n  \"phoneNumber\": \"+1234567890\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"licenseNumber\": \"REF-12345\",\n  \"grade\": \"A\",\n  \"certificationLevel\": \"National\",\n  \"yearsOfExperience\": 5,\n  \"totalMatchesOfficiated\": 50,\n  \"specialization\": \"MMA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register-referee",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register-referee"
+              ]
+            },
+            "description": "Register a new referee with required documents (ID Card, License). Account will be in PENDING status awaiting verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Register Coach",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"coach@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Mike Coach\",\n  \"phoneNumber\": \"+1234567890\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"licenseNumber\": \"COACH-12345\",\n  \"grade\": \"B\",\n  \"certificationLevel\": \"Regional\",\n  \"yearsOfExperience\": 3,\n  \"totalMatchesOfficiated\": 20,\n  \"specialization\": \"Boxing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register-coach",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register-coach"
+              ]
+            },
+            "description": "Register a new coach with required documents (ID Card, License). Account will be in PENDING status awaiting verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"your-refresh-token\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Obtain a new access token using a valid refresh token"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"your-refresh-token\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout user and invalidate the refresh token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Retrieve the currently authenticated user's profile information"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Club Management",
+      "item": [
+        {
+          "name": "Get my club",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/my-club",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "my-club"
+              ]
+            },
+            "description": "Retrieve the authenticated club's own profile information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update my club",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Warriors Gym\",\n  \"city\": \"New York\",\n  \"adminId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"description\": \"Top MMA gym\",\n  \"address\": \"123 Main St\",\n  \"phoneNumber\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/club/my-club",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "my-club"
+              ]
+            },
+            "description": "Update the authenticated club's own profile information"
+          },
+          "response": []
+        },
+        {
+          "name": "Get club by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Retrieve a specific club's profile by its ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get club public profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}",
+                "profile"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Retrieve the public profile of a club including coaches and basic information"
+          },
+          "response": []
+        },
+        {
+          "name": "Get club fighters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}/fighters",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}",
+                "fighters"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Retrieve all fighters belonging to the specified club"
+          },
+          "response": []
+        },
+        {
+          "name": "Add fighter to club",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newfighter@example.com\",\n  \"password\": \"fighterpass\",\n  \"fullName\": \"John Fighter\",\n  \"phoneNumber\": \"+1234567890\",\n  \"clubId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"coachId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"category\": \"Senior\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"weight\": 70.5,\n  \"birthDate\": \"2000-01-01\",\n  \"gender\": \"MALE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}/fighters",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}",
+                "fighters"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Create a new fighter and add them to the specified club. CLUB can only add to their own club, ADMIN/ORGANIZER can add to any club."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove fighter from club",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}/fighters/{{fighterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}",
+                "fighters",
+                "{{fighterId}}"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                },
+                {
+                  "key": "fighterId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Remove a fighter from the specified club. This soft-deletes the fighter account."
+          },
+          "response": []
+        },
+        {
+          "name": "Get club coaches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}/coaches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}",
+                "coaches"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Retrieve all coaches belonging to the specified club"
+          },
+          "response": []
+        },
+        {
+          "name": "Create new club",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"club@example.com\",\n  \"password\": \"clubpass\",\n  \"fullName\": \"John Manager\",\n  \"phoneNumber\": \"+1234567890\",\n  \"clubName\": \"Elite MMA\",\n  \"city\": \"Miami\",\n  \"address\": \"456 Beach Ave\",\n  \"description\": \"Professional MMA gym\",\n  \"logoUrl\": \"https://example.com/logo.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/club/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "create"
+              ]
+            },
+            "description": "Create a new club. Only ADMIN or ORGANIZER can perform this action."
+          },
+          "response": []
+        },
+        {
+          "name": "Invite fighter to club",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/invite-fighter/{{fighterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "invite-fighter",
+                "{{fighterId}}"
+              ],
+              "variable": [
+                {
+                  "key": "fighterId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Send an invitation to a fighter to join the authenticated club"
+          },
+          "response": []
+        },
+        {
+          "name": "Invite coach to club",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/invite-coach/{{coachId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "invite-coach",
+                "{{coachId}}"
+              ],
+              "variable": [
+                {
+                  "key": "coachId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Send an invitation to a coach to join the authenticated club"
+          },
+          "response": []
+        },
+        {
+          "name": "Respond to fighter request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"ACCEPT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/club/respond-fighter-request/{{membershipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "respond-fighter-request",
+                "{{membershipId}}"
+              ],
+              "variable": [
+                {
+                  "key": "membershipId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Accept or reject a fighter's request to join the club. Action must be 'ACCEPT' or 'REJECT'."
+          },
+          "response": []
+        },
+        {
+          "name": "Respond to coach request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"ACCEPT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/club/respond-coach-request/{{membershipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "respond-coach-request",
+                "{{membershipId}}"
+              ],
+              "variable": [
+                {
+                  "key": "membershipId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Accept or reject a coach's request to join the club. Action must be 'ACCEPT' or 'REJECT'."
+          },
+          "response": []
+        },
+        {
+          "name": "Update club logo URL",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}/logo?logoUrl=https://example.com/newlogo.png",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}",
+                "logo"
+              ],
+              "query": [
+                {
+                  "key": "logoUrl",
+                  "value": "https://example.com/newlogo.png",
+                  "description": "Logo URL"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Update the club's logo URL. Club can update its own logo, or ADMIN/ORGANIZER can update any club's logo."
+          },
+          "response": []
+        },
+        {
+          "name": "Block club",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}/block",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}",
+                "block"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Block an active club. Only ADMIN, ORGANIZER, or SUPER_ADMIN can perform this action."
+          },
+          "response": []
+        },
+        {
+          "name": "Activate club",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/{{clubId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "{{clubId}}",
+                "activate"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Activate a pending or blocked club. Only ADMIN, ORGANIZER, or SUPER_ADMIN can perform this action."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify club fighter",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/club/verify-fighter/{{fighterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "club",
+                "verify-fighter",
+                "{{fighterId}}"
+              ],
+              "variable": [
+                {
+                  "key": "fighterId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Verify a fighter belonging to the authenticated club. Only the club that owns the fighter can verify them."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tournaments",
+      "item": [
+        {
+          "name": "List tournaments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Page number (0-indexed)"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Page size"
+                }
+              ]
+            },
+            "description": "List tournaments with pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Create tournament",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"World MMA Championship 2025\",\n  \"description\": \"Elite MMA competition\",\n  \"level\": \"INTERNATIONAL\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"organizerId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"city\": \"Las Vegas\",\n  \"venue\": \"T-Mobile Arena\",\n  \"startDate\": \"2025-06-01\",\n  \"endDate\": \"2025-06-07\",\n  \"registrationOpenAt\": \"2025-03-01T10:00:00Z\",\n  \"registrationCloseAt\": \"2025-05-15T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments"
+              ]
+            },
+            "description": "Create a new tournament"
+          },
+          "response": []
+        },
+        {
+          "name": "Get tournament by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get tournament by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update tournament",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Tournament Name\",\n  \"description\": \"New description\",\n  \"level\": \"NATIONAL\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"organizerId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"city\": \"New York\",\n  \"venue\": \"MSG\",\n  \"startDate\": \"2025-07-01\",\n  \"endDate\": \"2025-07-05\",\n  \"registrationOpenAt\": \"2025-04-01T10:00:00Z\",\n  \"registrationCloseAt\": \"2025-06-15T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Update tournament details"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete tournament",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Delete a tournament"
+          },
+          "response": []
+        },
+        {
+          "name": "Add tournament division",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sportCategoryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"gender\": \"MALE\",\n  \"minWeight\": 66,\n  \"maxWeight\": 70,\n  \"maxParticipants\": 16\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/divisions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "divisions"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Adds an actual competition division to a tournament."
+          },
+          "response": []
+        },
+        {
+          "name": "List tournament divisions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/divisions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "divisions"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "List tournament divisions"
+          },
+          "response": []
+        },
+        {
+          "name": "Register athlete to tournament",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tournamentCategoryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"fighterUserId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/registrations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "registrations"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Registers a fighter into a tournament division. CLUB can register only fighters belonging to that gym, COACH only fighters assigned to that coach, FIGHTER only himself."
+          },
+          "response": []
+        },
+        {
+          "name": "List tournament registrations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/registrations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "registrations"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "List all tournament registrations"
+          },
+          "response": []
+        },
+        {
+          "name": "Approve tournament registration",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/registrations/{{registrationId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "registrations",
+                "{{registrationId}}",
+                "approve"
+              ],
+              "variable": [
+                {
+                  "key": "registrationId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Approve a tournament registration"
+          },
+          "response": []
+        },
+        {
+          "name": "Reject tournament registration",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Medical certificate is missing\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/registrations/{{registrationId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "registrations",
+                "{{registrationId}}",
+                "reject"
+              ],
+              "variable": [
+                {
+                  "key": "registrationId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Reject a tournament registration with a reason"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel tournament registration",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/registrations/{{registrationId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "registrations",
+                "{{registrationId}}",
+                "cancel"
+              ],
+              "variable": [
+                {
+                  "key": "registrationId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Cancel a tournament registration"
+          },
+          "response": []
+        },
+        {
+          "name": "Add tournament rule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sportId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"title\": \"No groin strikes\",\n  \"description\": \"Strikes to the groin area are prohibited and will result in a point deduction.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/rules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "rules"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Add a rule to the tournament"
+          },
+          "response": []
+        },
+        {
+          "name": "List tournament rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/rules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "rules"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "List all rules for a tournament"
+          },
+          "response": []
+        },
+        {
+          "name": "Open tournament registrations",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/open-registrations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "open-registrations"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Open registrations for the tournament"
+          },
+          "response": []
+        },
+        {
+          "name": "Close tournament registrations",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/close-registrations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "close-registrations"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Close registrations for the tournament"
+          },
+          "response": []
+        },
+        {
+          "name": "Reopen tournament registrations",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Technical issues prevented some clubs from registering\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/reopen-registrations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "reopen-registrations"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Reopens registrations after they were closed. A reason is required."
+          },
+          "response": []
+        },
+        {
+          "name": "Start tournament",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"All registrations are validated and divisions are set\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "start"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Starts the tournament. Status becomes IN_PROGRESS."
+          },
+          "response": []
+        },
+        {
+          "name": "Complete tournament",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"All matches finished\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "complete"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Mark tournament as completed"
+          },
+          "response": []
+        },
+        {
+          "name": "List tournament lifecycle events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tournaments/{{tournamentId}}/lifecycle-events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tournaments",
+                "{{tournamentId}}",
+                "lifecycle-events"
+              ],
+              "variable": [
+                {
+                  "key": "tournamentId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get audit log of all lifecycle changes (open, close, start, etc.)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Organizers",
+      "item": [
+        {
+          "name": "Get all organizers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "List all organizers with pagination. SUPER_ADMIN sees all. ADMIN sees only their country's organizers."
+          },
+          "response": []
+        },
+        {
+          "name": "Create organizer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"neworganizer@example.com\",\n  \"password\": \"securepass\",\n  \"fullName\": \"Jane Organizer\",\n  \"phoneNumber\": \"+1234567890\",\n  \"city\": \"Chicago\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers"
+              ]
+            },
+            "description": "Create a new organizer with ACTIVE status. Only SUPER_ADMIN or ADMIN can create organizers. ADMIN can only create in their own country."
+          },
+          "response": []
+        },
+        {
+          "name": "Get organizer by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers/{{organizerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers",
+                "{{organizerId}}"
+              ],
+              "variable": [
+                {
+                  "key": "organizerId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Retrieve organizer details. SUPER_ADMIN can view any organizer. ADMIN can only view organizers they created."
+          },
+          "response": []
+        },
+        {
+          "name": "Update organizer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"updated@example.com\",\n  \"password\": \"newpass123\",\n  \"fullName\": \"Updated Name\",\n  \"phoneNumber\": \"+1987654321\",\n  \"city\": \"Los Angeles\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers/{{organizerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers",
+                "{{organizerId}}"
+              ],
+              "variable": [
+                {
+                  "key": "organizerId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Update organizer details. SUPER_ADMIN can update any organizer. ADMIN can only update organizers in their own country."
+          },
+          "response": []
+        },
+        {
+          "name": "Block organizer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers/{{organizerId}}/block",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers",
+                "{{organizerId}}",
+                "block"
+              ],
+              "variable": [
+                {
+                  "key": "organizerId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Block an organizer (set status to DISABLED). Cannot block yourself."
+          },
+          "response": []
+        },
+        {
+          "name": "Unblock organizer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers/{{organizerId}}/unblock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers",
+                "{{organizerId}}",
+                "unblock"
+              ],
+              "variable": [
+                {
+                  "key": "organizerId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Unblock an organizer (set status to ACTIVE)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get my profile (Organizer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers",
+                "me"
+              ]
+            },
+            "description": "Retrieve the authenticated organizer's profile information. Only for ORGANIZER role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update my profile (Organizer)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"me@example.com\",\n  \"fullName\": \"My New Name\",\n  \"phoneNumber\": \"+1122334455\",\n  \"city\": \"Houston\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers",
+                "me"
+              ]
+            },
+            "description": "Update the authenticated organizer's profile information."
+          },
+          "response": []
+        },
+        {
+          "name": "Change my password (Organizer)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"oldpass123\",\n  \"newPassword\": \"newpass456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organizers/me/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "organizers",
+                "me",
+                "change-password"
+              ]
+            },
+            "description": "Change password for the authenticated organizer. Must provide current password."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "List all admins",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "countryId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "SUPER_ADMIN gets paginated list of all admins with optional filters."
+          },
+          "response": []
+        },
+        {
+          "name": "Create new admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newadmin@example.com\",\n  \"password\": \"adminpass\",\n  \"fullName\": \"Alice Admin\",\n  \"phoneNumber\": \"+1234567890\",\n  \"clubName\": \"Admin Club\",\n  \"city\": \"Boston\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin"
+              ]
+            },
+            "description": "SUPER_ADMIN creates a new admin user. Status is automatically set to ACTIVE."
+          },
+          "response": []
+        },
+        {
+          "name": "Get admin by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/{{adminId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "{{adminId}}"
+              ],
+              "variable": [
+                {
+                  "key": "adminId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "SUPER_ADMIN can view any admin. ADMIN can only view their own profile."
+          },
+          "response": []
+        },
+        {
+          "name": "Update admin by ID",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"updatedadmin@example.com\",\n  \"fullName\": \"Updated Admin\",\n  \"phoneNumber\": \"+1987654321\",\n  \"city\": \"Seattle\",\n  \"countryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/{{adminId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "{{adminId}}"
+              ],
+              "variable": [
+                {
+                  "key": "adminId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "SUPER_ADMIN updates any admin's profile. Cannot self-update via this endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Change admin password (SUPER_ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"newsecurepass\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/{{adminId}}/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "{{adminId}}",
+                "password"
+              ],
+              "variable": [
+                {
+                  "key": "adminId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "SUPER_ADMIN changes any admin's password without requiring old password."
+          },
+          "response": []
+        },
+        {
+          "name": "Change admin email (SUPER_ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newEmail\": \"newemail@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/{{adminId}}/email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "{{adminId}}",
+                "email"
+              ],
+              "variable": [
+                {
+                  "key": "adminId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "SUPER_ADMIN changes any admin's email address. Must be unique."
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/{{adminId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "{{adminId}}",
+                "deactivate"
+              ],
+              "variable": [
+                {
+                  "key": "adminId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "SUPER_ADMIN deactivates an admin. Cannot self-deactivate. Sets status to DISABLED."
+          },
+          "response": []
+        },
+        {
+          "name": "Activate admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/{{adminId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "{{adminId}}",
+                "activate"
+              ],
+              "variable": [
+                {
+                  "key": "adminId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "SUPER_ADMIN activates a disabled admin. Sets status to ACTIVE."
+          },
+          "response": []
+        },
+        {
+          "name": "Get my profile (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "me"
+              ]
+            },
+            "description": "Get current authenticated admin's profile using JWT token."
+          },
+          "response": []
+        },
+        {
+          "name": "Update my profile (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"My Updated Name\",\n  \"phoneNumber\": \"+15551234567\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "me"
+              ]
+            },
+            "description": "Update current authenticated admin's profile (fullName, phoneNumber)."
+          },
+          "response": []
+        },
+        {
+          "name": "Change my password (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"oldpass\",\n  \"newPassword\": \"newpass123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "me",
+                "password"
+              ]
+            },
+            "description": "Change current authenticated admin's password. Requires old password verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Change my email (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newEmail\": \"mynewemail@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/me/email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "me",
+                "email"
+              ]
+            },
+            "description": "Change current authenticated admin's email address."
+          },
+          "response": []
+        },
+        {
+          "name": "Get admin audit trail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/{{adminId}}/audit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "{{adminId}}",
+                "audit"
+              ],
+              "variable": [
+                {
+                  "key": "adminId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "SUPER_ADMIN can view any admin's audit. ADMIN can only view their own audit trail."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Verification",
+      "item": [
+        {
+          "name": "Get all pending users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/verification/pending?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "verification",
+                "pending"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get all users with PENDING status. SuperAdmin sees all, Admin/Organizer see only users they created."
+          },
+          "response": []
+        },
+        {
+          "name": "Get pending referees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/verification/pending/referees?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "verification",
+                "pending",
+                "referees"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get all REFEREE users with PENDING status."
+          },
+          "response": []
+        },
+        {
+          "name": "Get pending fighters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/verification/pending/fighters?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "verification",
+                "pending",
+                "fighters"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get all FIGHTER users with PENDING status."
+          },
+          "response": []
+        },
+        {
+          "name": "Get user documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/verification/{{userId}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "verification",
+                "{{userId}}",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get all uploaded document URLs for a user."
+          },
+          "response": []
+        },
+        {
+          "name": "Approve user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/verification/{{userId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "verification",
+                "{{userId}}",
+                "approve"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Approve a pending user and set status to ACTIVE."
+          },
+          "response": []
+        },
+        {
+          "name": "Reject user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"ID card is blurry and unreadable\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/verification/{{userId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "verification",
+                "{{userId}}",
+                "reject"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Reject a pending user with a reason note."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Countries",
+      "item": [
+        {
+          "name": "Get all countries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/countries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "countries"
+              ]
+            },
+            "description": "Retrieve a list of all available countries. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Create new country",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Canada\",\n  \"code\": \"CA\",\n  \"flagUrl\": \"https://example.com/ca-flag.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/countries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "countries"
+              ]
+            },
+            "description": "Create a new country. Only SUPER_ADMIN can perform this action."
+          },
+          "response": []
+        },
+        {
+          "name": "Get country by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/countries/{{countryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "countries",
+                "{{countryId}}"
+              ],
+              "variable": [
+                {
+                  "key": "countryId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Retrieve a specific country by its UUID. Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Get country by code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/countries/code/{{code}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "countries",
+                "code",
+                "{{code}}"
+              ],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": "US"
+                }
+              ]
+            },
+            "description": "Retrieve a specific country by its 2-letter ISO code (e.g., 'US', 'FR', 'MA'). Public endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete country",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/countries/{{countryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "countries",
+                "{{countryId}}"
+              ],
+              "variable": [
+                {
+                  "key": "countryId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Delete a country by its UUID. Only SUPER_ADMIN can perform this action. Cannot delete countries that have associated clubs."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sports & Categories",
+      "item": [
+        {
+          "name": "List sports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sports"
+              ]
+            },
+            "description": "List all sports."
+          },
+          "response": []
+        },
+        {
+          "name": "Create sport",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Muay Thai\",\n  \"code\": \"MT\",\n  \"description\": \"Thai boxing discipline\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sports"
+              ]
+            },
+            "description": "Create a new sport."
+          },
+          "response": []
+        },
+        {
+          "name": "Get sport by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sports/{{sportId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sports",
+                "{{sportId}}"
+              ],
+              "variable": [
+                {
+                  "key": "sportId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get sport by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update sport",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Sport Name\",\n  \"code\": \"USN\",\n  \"description\": \"New description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sports/{{sportId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sports",
+                "{{sportId}}"
+              ],
+              "variable": [
+                {
+                  "key": "sportId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Update a sport."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete sport",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sports/{{sportId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sports",
+                "{{sportId}}"
+              ],
+              "variable": [
+                {
+                  "key": "sportId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Delete a sport."
+          },
+          "response": []
+        },
+        {
+          "name": "List master categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            },
+            "description": "List all master age categories."
+          },
+          "response": []
+        },
+        {
+          "name": "Create master category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Junior\",\n  \"description\": \"Ages 12-17\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            },
+            "description": "Create a new master age category."
+          },
+          "response": []
+        },
+        {
+          "name": "Get category by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{categoryId}}"
+              ],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get master category by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update master category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Senior Updated\",\n  \"description\": \"Ages 18-40\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{categoryId}}"
+              ],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Update a master category."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete master category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "{{categoryId}}"
+              ],
+              "variable": [
+                {
+                  "key": "categoryId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Delete a master category."
+          },
+          "response": []
+        },
+        {
+          "name": "List sport category rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sports/{{sportId}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sports",
+                "{{sportId}}",
+                "categories"
+              ],
+              "variable": [
+                {
+                  "key": "sportId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "List age rules attached to a sport."
+          },
+          "response": []
+        },
+        {
+          "name": "Attach category to sport with age rules",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"minAge\": 18,\n  \"maxAge\": 40\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sports/{{sportId}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sports",
+                "{{sportId}}",
+                "categories"
+              ],
+              "variable": [
+                {
+                  "key": "sportId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Creates a SportCategory rule (e.g., MMA + Senior = ages 18-40)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "Get my documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "me"
+              ]
+            },
+            "description": "Retrieve all document URLs for the authenticated user (Fighter/Referee) or club logo URL for Club."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Profile Image / Club Logo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/image.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/profile-image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "profile-image"
+              ]
+            },
+            "description": "Upload or update profile image for Fighter/Referee, or logo for Club. Max 200KB, JPG/PNG."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Profile Image / Club Logo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/profile-image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "profile-image"
+              ]
+            },
+            "description": "Delete profile image for Fighter/Referee, or logo for Club."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload ID Card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/idcard.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/id-card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "id-card"
+              ]
+            },
+            "description": "Upload or update ID card. Max 1MB, JPG/PNG/PDF."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete ID Card",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/id-card",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "id-card"
+              ]
+            },
+            "description": "Delete ID card document."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Medical Certificate (Fighter)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/medical.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/medical-certificate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "medical-certificate"
+              ]
+            },
+            "description": "Upload or update medical certificate. Max 2MB, JPG/PNG/PDF."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Medical Certificate (Fighter)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/medical-certificate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "medical-certificate"
+              ]
+            },
+            "description": "Delete medical certificate."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Federal License (Fighter)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/license.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/federal-license",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "federal-license"
+              ]
+            },
+            "description": "Upload or update federal license. Max 1MB, JPG/PNG/PDF."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Federal License (Fighter)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/federal-license",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "federal-license"
+              ]
+            },
+            "description": "Delete federal license."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload License (Referee)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/license.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/license",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "license"
+              ]
+            },
+            "description": "Upload or update license (Referee). Max 1MB, JPG/PNG/PDF."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete License (Referee)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/license",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "license"
+              ]
+            },
+            "description": "Delete license (Referee)."
+          },
+          "response": []
+        },
+        {
+          "name": "Resubmit all documents (Fighter)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "idCard",
+                  "type": "file",
+                  "src": "/path/to/idcard.pdf"
+                },
+                {
+                  "key": "medicalCertificate",
+                  "type": "file",
+                  "src": "/path/to/medical.pdf"
+                },
+                {
+                  "key": "federalLicense",
+                  "type": "file",
+                  "src": "/path/to/federal.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/resubmit/fighter",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "resubmit",
+                "fighter"
+              ]
+            },
+            "description": "Resubmit all 3 required documents after being refused. Only allowed when status is REFUSED."
+          },
+          "response": []
+        },
+        {
+          "name": "Resubmit all documents (Referee)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "idCard",
+                  "type": "file",
+                  "src": "/path/to/idcard.pdf"
+                },
+                {
+                  "key": "license",
+                  "type": "file",
+                  "src": "/path/to/license.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/documents/resubmit/referee",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "documents",
+                "resubmit",
+                "referee"
+              ]
+            },
+            "description": "Resubmit all 2 required documents after being refused."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fighter & Coach Operations",
+      "item": [
+        {
+          "name": "Get fighter profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/{{fighterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "{{fighterId}}"
+              ],
+              "variable": [
+                {
+                  "key": "fighterId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get fighter profile details."
+          },
+          "response": []
+        },
+        {
+          "name": "Get fighter coach",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/{{fighterId}}/coach",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "{{fighterId}}",
+                "coach"
+              ],
+              "variable": [
+                {
+                  "key": "fighterId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get fighter's assigned coach."
+          },
+          "response": []
+        },
+        {
+          "name": "Get fighter clubs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/{{fighterId}}/clubs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "{{fighterId}}",
+                "clubs"
+              ],
+              "variable": [
+                {
+                  "key": "fighterId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get clubs the fighter belongs to."
+          },
+          "response": []
+        },
+        {
+          "name": "Get coach fighters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/coach/{{coachId}}/fighters",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coach",
+                "{{coachId}}",
+                "fighters"
+              ],
+              "variable": [
+                {
+                  "key": "coachId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get fighters trained by a coach."
+          },
+          "response": []
+        },
+        {
+          "name": "Get coach clubs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/coach/{{coachId}}/clubs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coach",
+                "{{coachId}}",
+                "clubs"
+              ],
+              "variable": [
+                {
+                  "key": "coachId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Get clubs a coach is associated with."
+          },
+          "response": []
+        },
+        {
+          "name": "Fighter: Request to join club",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/request-join-club/{{clubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "request-join-club",
+                "{{clubId}}"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Fighter sends request to join a club."
+          },
+          "response": []
+        },
+        {
+          "name": "Fighter: Request coach",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/request-coach/{{coachId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "request-coach",
+                "{{coachId}}"
+              ],
+              "variable": [
+                {
+                  "key": "coachId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Fighter requests a coach."
+          },
+          "response": []
+        },
+        {
+          "name": "Coach: Request to train fighter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/coach/request-train-fighter/{{fighterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coach",
+                "request-train-fighter",
+                "{{fighterId}}"
+              ],
+              "variable": [
+                {
+                  "key": "fighterId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Coach requests to train a fighter."
+          },
+          "response": []
+        },
+        {
+          "name": "Coach: Request to join club",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/coach/request-join-club/{{clubId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coach",
+                "request-join-club",
+                "{{clubId}}"
+              ],
+              "variable": [
+                {
+                  "key": "clubId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Coach requests to join a club."
+          },
+          "response": []
+        },
+        {
+          "name": "Fighter: Respond to coach request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"ACCEPT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/respond-coach-request/{{requestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "respond-coach-request",
+                "{{requestId}}"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Fighter accepts or rejects a coach's request."
+          },
+          "response": []
+        },
+        {
+          "name": "Fighter: Respond to club invitation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"ACCEPT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/respond-club-invitation/{{membershipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "respond-club-invitation",
+                "{{membershipId}}"
+              ],
+              "variable": [
+                {
+                  "key": "membershipId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Fighter accepts or rejects a club invitation."
+          },
+          "response": []
+        },
+        {
+          "name": "Coach: Respond to fighter request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"ACCEPT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/coach/respond-fighter-request/{{requestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coach",
+                "respond-fighter-request",
+                "{{requestId}}"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Coach accepts or rejects a fighter's request."
+          },
+          "response": []
+        },
+        {
+          "name": "Coach: Respond to club invitation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"ACCEPT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/coach/respond-club-invitation/{{membershipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coach",
+                "respond-club-invitation",
+                "{{membershipId}}"
+              ],
+              "variable": [
+                {
+                  "key": "membershipId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Coach accepts or rejects a club invitation."
+          },
+          "response": []
+        },
+        {
+          "name": "Fighter: Cancel coach request",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/cancel-coach-request/{{requestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "cancel-coach-request",
+                "{{requestId}}"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Fighter cancels a pending coach request."
+          },
+          "response": []
+        },
+        {
+          "name": "Fighter: Cancel club request",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fighter/cancel-club-request/{{membershipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fighter",
+                "cancel-club-request",
+                "{{membershipId}}"
+              ],
+              "variable": [
+                {
+                  "key": "membershipId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Fighter cancels a pending club join request."
+          },
+          "response": []
+        },
+        {
+          "name": "Coach: Cancel fighter request",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/coach/cancel-fighter-request/{{requestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coach",
+                "cancel-fighter-request",
+                "{{requestId}}"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Coach cancels a pending fighter request."
+          },
+          "response": []
+        },
+        {
+          "name": "Coach: Cancel club request",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/coach/cancel-club-request/{{membershipId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coach",
+                "cancel-club-request",
+                "{{membershipId}}"
+              ],
+              "variable": [
+                {
+                  "key": "membershipId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Coach cancels a pending club join request."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users (General)",
+      "item": [
+        {
+          "name": "Get all users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Retrieve paginated list of all users. Accessible by SUPER_ADMIN, ADMIN, and ORGANIZER."
+          },
+          "response": []
+        },
+        {
+          "name": "Get user by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "string"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                }
+              ]
+            },
+            "description": "Retrieve a specific user by their UUID."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://api.ufw-world.com"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ]
+}

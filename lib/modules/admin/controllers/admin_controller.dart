@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xfighter/data/repositories/admin_repository.dart';
+import 'package:xfighter/data/repositories/country_repository.dart';
 import 'package:xfighter/data/models/user_model.dart';
 import 'package:xfighter/data/models/admin_model.dart';
+import 'package:xfighter/data/models/country_model.dart';
 
 class AdminController extends GetxController {
   final AdminRepository _repo = AdminRepository();
+  final CountryRepository _countryRepo = CountryRepository();
 
   // ── State ─────────────────────────────────────────────────────────────────
   var admins = <User>[].obs;
+  var countries = <Country>[].obs;
   var selectedAdmin = Rx<User?>(null);
   var audit = Rx<AdminAuditResponse?>(null);
   var isLoading = false.obs;
@@ -42,6 +46,7 @@ class AdminController extends GetxController {
   void onInit() {
     super.onInit();
     loadAdmins();
+    loadCountries();
   }
 
   @override
@@ -55,6 +60,14 @@ class AdminController extends GetxController {
     newPasswordController.dispose();
     newEmailController.dispose();
     super.onClose();
+  }
+
+  Future<void> loadCountries() async {
+    try {
+      countries.value = await _countryRepo.getAllCountries();
+    } catch (_) {
+      countries.clear();
+    }
   }
 
   // ── Load ──────────────────────────────────────────────────────────────────
@@ -114,6 +127,7 @@ class AdminController extends GetxController {
       _clearForm();
       isCreating.value = false;
       _snack('Success', 'Admin created successfully');
+      if (Get.isDialogOpen ?? false) Get.back();
     } catch (e) {
       _snack('Error', 'Failed to create admin: $e', color: Colors.red);
     } finally {
@@ -215,6 +229,10 @@ class AdminController extends GetxController {
     }
     if (passwordController.text.length < 6) {
       _snack('Error', 'Password must be at least 6 characters', color: Colors.red);
+      return false;
+    }
+    if (fullNameController.text.trim().isEmpty) {
+      _snack('Error', 'Full name is required', color: Colors.red);
       return false;
     }
     if (selectedCountryId.value.isEmpty) {

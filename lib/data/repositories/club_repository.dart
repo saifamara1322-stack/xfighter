@@ -29,6 +29,16 @@ class ClubRepository {
     return Club.fromJson(body['data'] as Map<String, dynamic>);
   }
 
+  /// Resolves the authenticated club account's club ID (not the user ID).
+  Future<String?> resolveMyClubId() async {
+    try {
+      final club = await getMyClub();
+      return club.id;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ── Members ────────────────────────────────────────────────────────────────
 
   Future<List<Fighter>> getClubFighters(String clubId) async {

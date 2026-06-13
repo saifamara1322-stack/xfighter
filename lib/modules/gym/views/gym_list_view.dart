@@ -3,6 +3,10 @@ import 'package:get/get.dart';
 import 'package:xfighter/modules/gym/controllers/gym_controller.dart';
 import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
 import 'package:xfighter/data/models/club_model.dart';
+import 'package:xfighter/data/models/user_model.dart';
+import 'package:xfighter/modules/gym/views/create_club_view.dart';
+import 'package:xfighter/modules/gym/views/find_club_tab.dart';
+import 'package:xfighter/core/routes/app_router.dart';
 
 class GymListView extends StatelessWidget {
   const GymListView({super.key});
@@ -16,6 +20,30 @@ class GymListView extends StatelessWidget {
       length: 2,
       child: Scaffold(
         backgroundColor: const Color(0xFF0A0A0A),
+       
+        floatingActionButton: Obx(() {
+          final role = authController.currentUser.value?.role;
+          final canCreate = role == UserRole.ADMIN ||
+              role == UserRole.SUPER_ADMIN ||
+              role == UserRole.ORGANIZER;
+          if (!canCreate) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 32),
+            child: ElevatedButton.icon(
+              onPressed: () => Get.to(() => const AddGymView()),
+              icon: const Icon(Icons.add_business),
+              label: const Text('CREATE CLUB'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE31837),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
+              ),
+            ),
+          );
+        }),
         appBar: AppBar(
           title: const Text(
             'GYMS & CLUBS',
@@ -37,8 +65,8 @@ class GymListView extends StatelessWidget {
               letterSpacing: 1,
             ),
             tabs: [
-              Tab(text: 'ACTIVE GYMS'),
-              Tab(text: 'MY GYMS'),
+              Tab(text: 'MY CLUBS'),
+              Tab(text: 'FIND CLUB'),
             ],
           ),
         ),
@@ -53,8 +81,8 @@ class GymListView extends StatelessWidget {
           
           return TabBarView(
             children: [
-              _buildActiveGymsTab(controller),
-              _buildMyGymsTab(controller, authController),
+              _buildMyClubsTab(controller, authController),
+              const FindClubTab(),
             ],
           );
         }),
@@ -62,29 +90,10 @@ class GymListView extends StatelessWidget {
     );
   }
   
-  Widget _buildActiveGymsTab(GymController controller) {
-    final activeGyms = controller.clubs.where((g) => g.status == ClubStatus.ACTIVE).toList();
-    
-    if (activeGyms.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.business_outlined,
-        title: 'NO ACTIVE GYMS',
-        subtitle: 'Gyms will appear here after verification',
-      );
-    }
-    
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: activeGyms.length,
-      itemBuilder: (context, index) {
-        final gym = activeGyms[index];
-        return _buildGymCard(gym);
-      },
-    );
-  }
-  
-  Widget _buildMyGymsTab(GymController controller, AuthController authController) {
-    final myClubs = controller.myClub.value != null ? [controller.myClub.value!] : <Club>[];
+  Widget _buildMyClubsTab(GymController controller, AuthController authController) {
+    final myClubs = controller.clubs.isNotEmpty
+        ? controller.clubs
+        : (controller.myClub.value != null ? [controller.myClub.value!] : <Club>[]);
     if (myClubs.isEmpty) {
       return _buildEmptyState(
         icon: Icons.add_business_outlined,
@@ -104,7 +113,7 @@ class GymListView extends StatelessWidget {
       },
     );
   }
-  
+
   Widget _buildEmptyState({
     required IconData icon,
     required String title,
@@ -194,7 +203,7 @@ class GymListView extends StatelessWidget {
         ),
       ),
       child: InkWell(
-        onTap: () => Get.toNamed('/gym/${gym.id}'),
+        onTap: () => Get.toNamed(AppRouter.clubDetail.replaceAll(':id', gym.id)),
         borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.all(16),

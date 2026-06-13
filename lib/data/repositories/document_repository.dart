@@ -15,8 +15,11 @@ class DocumentRepository {
   // ── Profile image ─────────────────────────────────────────────────────────
 
   Future<Map<String, String>> uploadProfileImage(File file) async {
-    final body = await _api.uploadFile('/documents/profile-image',
-        file: file, fieldName: 'file');
+    final body = await _api.uploadFile(
+      '/documents/profile-image',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 
@@ -27,8 +30,11 @@ class DocumentRepository {
   // ── ID Card ───────────────────────────────────────────────────────────────
 
   Future<Map<String, String>> uploadIdCard(File file) async {
-    final body =
-        await _api.uploadFile('/documents/id-card', file: file, fieldName: 'file');
+    final body = await _api.uploadFile(
+      '/documents/id-card',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 
@@ -39,8 +45,11 @@ class DocumentRepository {
   // ── Medical certificate (Fighter) ─────────────────────────────────────────
 
   Future<Map<String, String>> uploadMedicalCertificate(File file) async {
-    final body = await _api.uploadFile('/documents/medical-certificate',
-        file: file, fieldName: 'file');
+    final body = await _api.uploadFile(
+      '/documents/medical-certificate',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 
@@ -51,8 +60,11 @@ class DocumentRepository {
   // ── Federal license (Fighter) ─────────────────────────────────────────────
 
   Future<Map<String, String>> uploadFederalLicense(File file) async {
-    final body = await _api.uploadFile('/documents/federal-license',
-        file: file, fieldName: 'file');
+    final body = await _api.uploadFile(
+      '/documents/federal-license',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 
@@ -63,8 +75,11 @@ class DocumentRepository {
   // ── License (Referee) ─────────────────────────────────────────────────────
 
   Future<Map<String, String>> uploadLicense(File file) async {
-    final body =
-        await _api.uploadFile('/documents/license', file: file, fieldName: 'file');
+    final body = await _api.uploadFile(
+      '/documents/license',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 
@@ -73,6 +88,19 @@ class DocumentRepository {
   }
 
   // ── Resubmit (Fighter) ────────────────────────────────────────────────────
+
+  Future<Map<String, String>> submitFighterDocuments({
+    required File idCard,
+    required File medicalCertificate,
+    required File federalLicense,
+  }) async {
+    final body = await _api.uploadFiles('/documents/submit/fighter', {
+      'idCard': idCard,
+      'medicalCertificate': medicalCertificate,
+      'federalLicense': federalLicense,
+    });
+    return Map<String, String>.from(body['data'] as Map? ?? {});
+  }
 
   Future<Map<String, String>> resubmitFighterDocuments({
     required File idCard,
@@ -103,38 +131,50 @@ class DocumentRepository {
   // ── Club-on-behalf-of-fighter ─────────────────────────────────────────────
 
   Future<Map<String, String>> clubUploadFighterProfileImage(
-      String fighterId, File file) async {
+    String fighterId,
+    File file,
+  ) async {
     final body = await _api.uploadFile(
-        '/documents/club/fighter/$fighterId/profile-image',
-        file: file,
-        fieldName: 'file');
+      '/documents/club/fighter/$fighterId/profile-image',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 
   Future<Map<String, String>> clubUploadFighterIdCard(
-      String fighterId, File file) async {
+    String fighterId,
+    File file,
+  ) async {
     final body = await _api.uploadFile(
-        '/documents/club/fighter/$fighterId/id-card',
-        file: file,
-        fieldName: 'file');
+      '/documents/club/fighter/$fighterId/id-card',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 
   Future<Map<String, String>> clubUploadFighterMedicalCertificate(
-      String fighterId, File file) async {
+    String fighterId,
+    File file,
+  ) async {
     final body = await _api.uploadFile(
-        '/documents/club/fighter/$fighterId/medical-certificate',
-        file: file,
-        fieldName: 'file');
+      '/documents/club/fighter/$fighterId/medical-certificate',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 
   Future<Map<String, String>> clubUploadFighterFederalLicense(
-      String fighterId, File file) async {
+    String fighterId,
+    File file,
+  ) async {
     final body = await _api.uploadFile(
-        '/documents/club/fighter/$fighterId/federal-license',
-        file: file,
-        fieldName: 'file');
+      '/documents/club/fighter/$fighterId/federal-license',
+      file: file,
+      fieldName: 'file',
+    );
     return Map<String, String>.from(body['data'] as Map? ?? {});
   }
 

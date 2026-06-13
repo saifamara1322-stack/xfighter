@@ -4,10 +4,12 @@ import 'package:xfighter/data/repositories/fighter_repository.dart';
 import 'package:xfighter/data/models/fighter_model.dart';
 import 'package:xfighter/data/models/coach_model.dart';
 import 'package:xfighter/data/models/club_model.dart';
+import 'package:xfighter/data/repositories/user_lookup_repository.dart';
 import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
 
 class FighterController extends GetxController {
   final FighterRepository _fighterRepository = FighterRepository();
+  final UserLookupRepository _lookup = UserLookupRepository();
   final AuthController _authController = Get.find<AuthController>();
 
   var currentFighter = Rx<Fighter?>(null);
@@ -15,31 +17,40 @@ class FighterController extends GetxController {
   var currentClubs = <Club>[].obs;
   var isLoading = false.obs;
 
-  // Pending request IDs (for cancel actions)
   var pendingClubRequestId = RxString('');
   var pendingCoachRequestId = RxString('');
+  
 
   @override
   void onInit() {
     super.onInit();
-    final userId = _authController.currentUser.value?.id;
-    if (userId != null) loadFighterProfile(userId);
+    _loadCurrentUserProfile();
   }
 
-  // ── Load ──────────────────────────────────────────────────────────────────
+  Future<void> refreshProfile() async {
+    final userId = _authController.currentUser.value?.id;
+    if (userId != null) await loadFighterProfile(userId);
+  }
 
-  Future<void> loadFighterProfile(String fighterId) async {
+  Future<void> loadFighterProfile(String userId) async {
     isLoading.value = true;
     try {
-      currentFighter.value =
-          await _fighterRepository.getFighterProfile(fighterId);
+      final fighter = await _fighterRepository.getFighterByUserId(userId);
+      currentFighter.value = fighter;
+
+      final fighterId = fighter.id;
       await Future.wait([
-        _loadCoach(fighterId),
         _loadClubs(fighterId),
+        _loadCoach(fighterId),
       ]);
     } catch (e) {
-      _snack('Erreur', 'Impossible de charger le profil: $e',
-          color: Colors.red);
+      if (e.toString().contains('Fighter not found')) {
+        currentFighter.value = null;
+        currentClubs.clear();
+        currentCoach.value = null;
+      } else {
+        _snack('Erreur', 'Impossible de charger le profil: $e', color: Colors.red);
+      }
     } finally {
       isLoading.value = false;
     }
@@ -47,8 +58,7 @@ class FighterController extends GetxController {
 
   Future<void> _loadCoach(String fighterId) async {
     try {
-      currentCoach.value =
-          await _fighterRepository.getFighterCoach(fighterId);
+      currentCoach.value = await _fighterRepository.getFighterCoach(fighterId);
     } catch (_) {
       currentCoach.value = null;
     }
@@ -56,14 +66,29 @@ class FighterController extends GetxController {
 
   Future<void> _loadClubs(String fighterId) async {
     try {
-      currentClubs.value =
-          await _fighterRepository.getFighterClubs(fighterId);
+      currentClubs.value = await _fighterRepository.getFighterClubs(fighterId);
     } catch (_) {
       currentClubs.value = [];
     }
   }
 
-  // ── Club membership ────────────────────────────────────────────────────────
+  Future<void> _loadCurrentUserProfile() async {
+    final userId = _authController.currentUser.value?.id;
+    if (userId != null) await loadFighterProfile(userId);
+  }
+
+  // Club membership methods (unchanged)
+  Future<void> requestJoinClubByEmail(String clubEmail) async {
+    isLoading.value = true;
+    try {
+      final clubId = await _lookup.resolveClubIdByEmail(clubEmail);
+      await requestJoinClub(clubId);
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   Future<void> requestJoinClub(String clubId) async {
     isLoading.value = true;
@@ -77,15 +102,12 @@ class FighterController extends GetxController {
     }
   }
 
-  Future<void> respondToClubInvitation(
-      String membershipId, String action) async {
+  Future<void> respondToClubInvitation(String membershipId, String action) async {
     isLoading.value = true;
     try {
       await _fighterRepository.respondToClubInvitation(membershipId, action);
-      _snack('Succès',
-          action == 'ACCEPT' ? 'Invitation acceptée' : 'Invitation refusée');
-      final userId = _authController.currentUser.value?.id;
-      if (userId != null) await loadFighterProfile(userId);
+      _snack('Succès', action == 'ACCEPT' ? 'Invitation acceptée' : 'Invitation refusée');
+      await refreshProfile();
     } catch (e) {
       _snack('Erreur', e.toString(), color: Colors.red);
     } finally {
@@ -98,6 +120,7 @@ class FighterController extends GetxController {
     try {
       await _fighterRepository.cancelClubRequest(membershipId);
       _snack('Succès', 'Demande annulée');
+      await refreshProfile();
     } catch (e) {
       _snack('Erreur', e.toString(), color: Colors.red);
     } finally {
@@ -105,7 +128,18 @@ class FighterController extends GetxController {
     }
   }
 
-  // ── Coach relationship ─────────────────────────────────────────────────────
+  // Coach relationship methods
+  Future<void> requestCoachByEmail(String coachEmail) async {
+    isLoading.value = true;
+    try {
+      final coachId = await _lookup.resolveCoachIdByEmail(coachEmail);
+      await requestCoach(coachId);
+    } catch (e) {
+      _snack('Erreur', e.toString(), color: Colors.red);
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   Future<void> requestCoach(String coachId) async {
     isLoading.value = true;
@@ -119,15 +153,12 @@ class FighterController extends GetxController {
     }
   }
 
-  Future<void> respondToCoachRequest(
-      String requestId, String action) async {
+  Future<void> respondToCoachRequest(String requestId, String action) async {
     isLoading.value = true;
     try {
       await _fighterRepository.respondToCoachRequest(requestId, action);
-      _snack('Succès',
-          action == 'ACCEPT' ? 'Demande acceptée' : 'Demande refusée');
-      final userId = _authController.currentUser.value?.id;
-      if (userId != null) await loadFighterProfile(userId);
+      _snack('Succès', action == 'ACCEPT' ? 'Demande acceptée' : 'Demande refusée');
+      await refreshProfile();
     } catch (e) {
       _snack('Erreur', e.toString(), color: Colors.red);
     } finally {
@@ -140,14 +171,13 @@ class FighterController extends GetxController {
     try {
       await _fighterRepository.cancelCoachRequest(requestId);
       _snack('Succès', 'Demande annulée');
+      await refreshProfile();
     } catch (e) {
       _snack('Erreur', e.toString(), color: Colors.red);
     } finally {
       isLoading.value = false;
     }
   }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
 
   void _snack(String title, String msg, {Color color = Colors.green}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {

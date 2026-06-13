@@ -95,6 +95,7 @@ class OrganizerController extends GetxController {
       _clearForm();
       isCreating.value = false;
       _snack('Success', 'Organizer created successfully');
+      if (Get.isDialogOpen ?? false) Get.back();
     } catch (e) {
       _snack('Error', 'Failed to create organizer: $e', color: Colors.red);
     } finally {
@@ -173,6 +174,10 @@ class OrganizerController extends GetxController {
     if (passwordController.text.length < 6) {
       _snack('Error', 'Password must be at least 6 characters',
           color: Colors.red);
+      return false;
+    }
+    if (fullNameController.text.trim().isEmpty) {
+      _snack('Error', 'Full name is required', color: Colors.red);
       return false;
     }
     return true;

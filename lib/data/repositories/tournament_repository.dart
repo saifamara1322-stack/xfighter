@@ -52,7 +52,41 @@ class TournamentRepository {
 
   // ── Status lifecycle ──────────────────────────────────────────────────────
 
-  /// Change tournament status (DRAFT→OPEN, OPEN→CLOSED, etc.)
+  Future<Tournament> openRegistrations(String id) async {
+    final body = await _api.patch('/tournaments/$id/open-registrations');
+    return Tournament.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  Future<Tournament> closeRegistrations(String id) async {
+    final body = await _api.patch('/tournaments/$id/close-registrations');
+    return Tournament.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  Future<Tournament> reopenRegistrations(String id, {String? reason}) async {
+    final body = await _api.patch('/tournaments/$id/reopen-registrations',
+        data: reason != null ? {'reason': reason} : null);
+    return Tournament.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  Future<Tournament> startTournament(String id, {String? reason}) async {
+    final body = await _api.patch('/tournaments/$id/start',
+        data: reason != null ? {'reason': reason} : null);
+    return Tournament.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  Future<Tournament> completeTournament(String id, {String? reason}) async {
+    final body = await _api.patch('/tournaments/$id/complete',
+        data: reason != null ? {'reason': reason} : null);
+    return Tournament.fromJson(body['data'] as Map<String, dynamic>);
+  }
+
+  Future<List<Map<String, dynamic>>> getLifecycleEvents(String id) async {
+    final body = await _api.get('/tournaments/$id/lifecycle-events');
+    final data = body['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  /// Change tournament status (legacy fallback).
   Future<Tournament> changeStatus(String id, String newStatus) async {
     final body = await _api.put('/tournaments/$id',
         data: UpdateTournamentRequest(status: newStatus).toJson());
@@ -108,6 +142,30 @@ class TournamentRepository {
       String id, CreateTournamentRegistrationRequest request) async {
     final body = await _api.post('/tournaments/$id/registrations',
         data: request.toJson());
+    return TournamentRegistration.fromJson(
+        body['data'] as Map<String, dynamic>);
+  }
+
+  Future<TournamentRegistration> approveRegistration(String registrationId) async {
+    final body = await _api.patch(
+        '/tournaments/registrations/$registrationId/approve');
+    return TournamentRegistration.fromJson(
+        body['data'] as Map<String, dynamic>);
+  }
+
+  Future<TournamentRegistration> rejectRegistration(
+      String registrationId, String reason) async {
+    final body = await _api.patch(
+        '/tournaments/registrations/$registrationId/reject',
+        data: {'reason': reason});
+    return TournamentRegistration.fromJson(
+        body['data'] as Map<String, dynamic>);
+  }
+
+  Future<TournamentRegistration> cancelRegistration(
+      String registrationId) async {
+    final body = await _api.patch(
+        '/tournaments/registrations/$registrationId/cancel');
     return TournamentRegistration.fromJson(
         body['data'] as Map<String, dynamic>);
   }

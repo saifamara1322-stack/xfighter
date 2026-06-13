@@ -2,14 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/repositories/tournament_repository.dart';
 import '../../../data/repositories/country_repository.dart';
+import '../../../data/repositories/club_repository.dart';
+import '../../../data/repositories/coach_repository.dart';
 import '../../../data/models/tournament_model.dart';
 import '../../../data/models/country_model.dart';
+import '../../../data/models/category_model.dart';
+import '../../../data/models/fighter_model.dart';
+import '../../../data/repositories/category_repository.dart';
+import '../../../data/repositories/user_lookup_repository.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../../data/models/user_model.dart';
 
 class EventController extends GetxController {
   final TournamentRepository _tournamentRepo = TournamentRepository();
   final CountryRepository _countryRepo = CountryRepository();
+  final ClubRepository _clubRepo = ClubRepository();
+  final CoachRepository _coachRepo = CoachRepository();
+  final CategoryRepository _categoryRepo = CategoryRepository();
+  final UserLookupRepository _lookup = UserLookupRepository();
   final AuthController _authController = Get.find<AuthController>();
 
   var events = <Tournament>[].obs;
@@ -22,6 +32,8 @@ class EventController extends GetxController {
   var eventRegistrations = <TournamentRegistration>[].obs;
   var eventRules = <TournamentRule>[].obs;
   var countries = <Country>[].obs;
+  var categories = <Category>[].obs;
+  var registerableFighters = <Fighter>[].obs;
 
   var isLoading = false.obs;
   var isCreating = false.obs;
@@ -37,6 +49,15 @@ class EventController extends GetxController {
     super.onInit();
     loadEvents();
     loadCountries();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      categories.value = await _categoryRepo.getCategories();
+    } catch (_) {
+      categories.clear();
+    }
   }
 
   @override
@@ -117,12 +138,58 @@ class EventController extends GetxController {
       eventDivisions.value = results[1] as List<TournamentDivision>;
       eventRegistrations.value = results[2] as List<TournamentRegistration>;
       eventRules.value = results[3] as List<TournamentRule>;
+      await _loadRegisterableFighters();
     } catch (e) {
       selectedEvent.value = null;
       _showSnackbar('Erreur', 'Failed to load details: $e', backgroundColor: Colors.red);
     } finally {
       isDetailLoading.value = false;
     }
+  }
+
+  Future<void> _loadRegisterableFighters() async {
+    registerableFighters.clear();
+    final user = _authController.currentUser.value;
+    if (user == null) return;
+
+    try {
+      switch (user.role) {
+        case UserRole.CLUB:
+          final clubId = await _clubRepo.resolveMyClubId();
+          if (clubId != null) {
+            registerableFighters.value =
+                await _clubRepo.getClubFighters(clubId);
+          }
+          break;
+        case UserRole.COACH:
+          registerableFighters.value =
+              await _coachRepo.getCoachFighters(user.id);
+          break;
+        default:
+          break;
+      }
+    } catch (_) {
+      registerableFighters.clear();
+    }
+  }
+
+  TournamentRegistration? registrationForFighter(
+      String fighterId, String divisionId) {
+    return eventRegistrations.firstWhereOrNull(
+      (r) => r.fighterId == fighterId && r.divisionId == divisionId,
+    );
+  }
+
+  bool get canRegisterOthers {
+    final role = _authController.currentUser.value?.role;
+    return role == UserRole.CLUB || role == UserRole.COACH;
+  }
+
+  bool isRegistrationWindowOpen(Tournament event) {
+    final now = DateTime.now();
+    return event.status == TournamentStatus.OPEN &&
+        now.isAfter(event.registrationOpenAt) &&
+        now.isBefore(event.registrationCloseAt);
   }
 
   Future<void> createEventWithValues({
@@ -212,50 +279,151 @@ class EventController extends GetxController {
 
   Future<void> changeStatus(String id, String newStatus) async {
     try {
-      final updated = await _tournamentRepo.changeStatus(id, newStatus);
+      Tournament updated;
+      switch (newStatus) {
+        case 'OPEN':
+          updated = await _tournamentRepo.openRegistrations(id);
+          break;
+        case 'CLOSED':
+          updated = await _tournamentRepo.closeRegistrations(id);
+          break;
+        case 'IN_PROGRESS':
+          updated = await _tournamentRepo.startTournament(id);
+          break;
+        case 'COMPLETED':
+          updated = await _tournamentRepo.completeTournament(id);
+          break;
+        default:
+          updated = await _tournamentRepo.changeStatus(id, newStatus);
+      }
       selectedEvent.value = updated;
 
       final index = events.indexWhere((e) => e.id == id);
       if (index != -1) events[index] = updated;
 
-      _showSnackbar('Succès', 'Status changed to $newStatus');
+      _showSnackbar('Succès', 'Status changed to ${updated.status.displayName}');
     } catch (e) {
       _showSnackbar('Erreur', 'Failed to change status: $e', backgroundColor: Colors.red);
     }
   }
 
-  Future<void> registerForTournament(String eventId, String? divisionId) async {
+  Future<void> approveRegistration(String registrationId) async {
+    try {
+      final updated =
+          await _tournamentRepo.approveRegistration(registrationId);
+      final index =
+          eventRegistrations.indexWhere((r) => r.id == registrationId);
+      if (index != -1) eventRegistrations[index] = updated;
+      _showSnackbar('Succès', 'Registration approved');
+    } catch (e) {
+      _showSnackbar('Erreur', 'Failed to approve: $e', backgroundColor: Colors.red);
+    }
+  }
+
+  Future<void> rejectRegistration(String registrationId, String reason) async {
+    try {
+      final updated =
+          await _tournamentRepo.rejectRegistration(registrationId, reason);
+      final index =
+          eventRegistrations.indexWhere((r) => r.id == registrationId);
+      if (index != -1) eventRegistrations[index] = updated;
+      _showSnackbar('Succès', 'Registration rejected');
+    } catch (e) {
+      _showSnackbar('Erreur', 'Failed to reject: $e', backgroundColor: Colors.red);
+    }
+  }
+
+  Future<void> cancelRegistration(String registrationId) async {
+    try {
+      final updated =
+          await _tournamentRepo.cancelRegistration(registrationId);
+      final index =
+          eventRegistrations.indexWhere((r) => r.id == registrationId);
+      if (index != -1) eventRegistrations[index] = updated;
+      _showSnackbar('Succès', 'Registration cancelled');
+    } catch (e) {
+      _showSnackbar('Erreur', 'Failed to cancel: $e', backgroundColor: Colors.red);
+    }
+  }
+
+  bool get isParticipant {
+    final role = _authController.currentUser.value?.role;
+    return role == UserRole.FIGHTER ||
+        role == UserRole.COACH ||
+        role == UserRole.CLUB;
+  }
+
+  Future<void> registerFighterByEmailForTournament(
+    String eventId,
+    String divisionId,
+    String fighterEmail,
+  ) async {
+    try {
+      final fighterId = await _lookup.resolveFighterIdByEmail(fighterEmail);
+      await registerForTournament(
+        eventId,
+        divisionId,
+        fighterUserId: fighterId,
+      );
+    } catch (e) {
+      _showSnackbar('Erreur', e.toString(), backgroundColor: Colors.red);
+    }
+  }
+
+  Future<void> registerForTournament(String eventId, String? divisionId,
+      {String? fighterUserId}) async {
     final currentUserId = _authController.currentUser.value?.id;
     if (currentUserId == null) {
       _showSnackbar('Erreur', 'You must be logged in to register.', backgroundColor: Colors.red);
       return;
     }
 
+    final targetFighterId = fighterUserId ?? currentUserId;
+
     try {
       final request = CreateTournamentRegistrationRequest(
-        fighterId: currentUserId,
+        fighterId: targetFighterId,
         divisionId: divisionId,
       );
       final reg = await _tournamentRepo.registerAthlete(eventId, request);
-      eventRegistrations.add(reg);
+      final existing =
+          eventRegistrations.indexWhere((r) => r.id == reg.id);
+      if (existing >= 0) {
+        eventRegistrations[existing] = reg;
+      } else {
+        eventRegistrations.add(reg);
+      }
 
       final event = events.firstWhereOrNull((e) => e.id == eventId);
       if (event != null && !myRegisteredEvents.any((e) => e.id == eventId)) {
         myRegisteredEvents.add(event);
       }
 
-      _showSnackbar('Succès', 'Successfully registered for tournament!');
+      _showSnackbar('Succès', 'Registration submitted successfully!');
     } catch (e) {
       _showSnackbar('Erreur', 'Failed to register: $e', backgroundColor: Colors.red);
     }
   }
 
-  Future<void> createDivision(String eventId, String categoryName, String? gender, double? minW, double? maxW) async {
+  Future<void> createDivision(
+    String eventId, {
+    String? sportCategoryId,
+    String? gender,
+    double? minW,
+    double? maxW,
+    int? maxParticipants,
+  }) async {
+    if (sportCategoryId == null || sportCategoryId.isEmpty) {
+      _showSnackbar('Erreur', 'Sport category is required', backgroundColor: Colors.red);
+      return;
+    }
     try {
       final request = CreateTournamentDivisionRequest(
+        categoryId: sportCategoryId,
         gender: gender,
         weightMin: minW,
         weightMax: maxW,
+        maxParticipants: maxParticipants,
       );
       final div = await _tournamentRepo.addDivision(eventId, request);
       eventDivisions.add(div);

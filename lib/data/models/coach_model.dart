@@ -29,10 +29,10 @@ class Coach {
         id: json['id']?.toString() ?? '',
         email: json['email'] ?? '',
         fullName: json['fullName'] ?? '',
-        specialty: json['specialty'],
-        licenseNo: json['licenseNo'],
-        phoneNumber: json['phoneNumber'],
-        country: json['country'],
+        specialty: json['specialty']?.toString(),
+        licenseNo: json['licenseNo']?.toString(),
+        phoneNumber: json['phoneNumber']?.toString(),
+        country: json['country']?.toString(),
         clubs: (json['clubs'] as List<dynamic>? ?? [])
             .map((e) => ClubSummary.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -42,10 +42,10 @@ class Coach {
         'id': id,
         'email': email,
         'fullName': fullName,
-        'specialty': specialty,
-        'licenseNo': licenseNo,
-        'phoneNumber': phoneNumber,
-        'country': country,
+        if (specialty != null) 'specialty': specialty,
+        if (licenseNo != null) 'licenseNo': licenseNo,
+        if (phoneNumber != null) 'phoneNumber': phoneNumber,
+        if (country != null) 'country': country,
         'clubs': clubs.map((c) => c.toJson()).toList(),
       };
 }

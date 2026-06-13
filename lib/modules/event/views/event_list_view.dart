@@ -23,8 +23,13 @@ class EventListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final role = _authController.currentUser.value?.role;
-      final showTabs = role == UserRole.FIGHTER || role == UserRole.ORGANIZER;
-      final isOrganizer = role == UserRole.ORGANIZER || role == UserRole.ADMIN || role == UserRole.SUPER_ADMIN;
+      final showTabs = role == UserRole.FIGHTER ||
+          role == UserRole.ORGANIZER ||
+          role == UserRole.COACH;
+      final isOrganizer =
+          role == UserRole.ORGANIZER ||
+          role == UserRole.ADMIN ||
+          role == UserRole.SUPER_ADMIN;
 
       Widget content = Scaffold(
         backgroundColor: const Color(0xFF0A0A0A),
@@ -32,33 +37,45 @@ class EventListView extends StatelessWidget {
           backgroundColor: const Color(0xFF0D0D1A),
           elevation: 0,
           title: showTabs
-              ? const TabBar(
-                  indicatorColor: Color(0xFFE31837),
+              ? TabBar(
+                  indicatorColor: const Color(0xFFE31837),
                   labelColor: Colors.white,
                   unselectedLabelColor: Colors.white70,
                   tabs: [
-                    Tab(text: 'All Tournaments'),
-                    Tab(text: 'My Tournaments'),
+                    const Tab(text: 'All Tournaments'),
+                    Tab(
+                      text: role == UserRole.COACH
+                          ? 'Open Registration'
+                          : 'My Tournaments',
+                    ),
                   ],
                 )
               : null,
         ),
         floatingActionButton: isOrganizer
             ? FloatingActionButton(
-                onPressed: () => Get.toNamed(AppRouter.createEvent),
+                onPressed: () => Get.toNamed(AppRouter.legacyCreateEvent),
                 backgroundColor: const Color(0xFFE31837),
                 child: const Icon(Icons.add, color: Colors.white),
               )
             : const SizedBox.shrink(),
         body: Obx(() {
-          if (_eventController.isLoading.value && _eventController.events.isEmpty) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFE31837)));
+          if (_eventController.isLoading.value &&
+              _eventController.events.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFFE31837)),
+            );
           }
 
           if (showTabs) {
             final myEvents = role == UserRole.FIGHTER
                 ? _eventController.myRegisteredEvents
-                : _eventController.organizerEvents;
+                : role == UserRole.ORGANIZER
+                    ? _eventController.organizerEvents
+                    : _eventController.events
+                        .where((e) =>
+                            _eventController.isRegistrationWindowOpen(e))
+                        .toList();
             return TabBarView(
               children: [
                 _buildEventList(_eventController.events),
@@ -86,7 +103,10 @@ class EventListView extends StatelessWidget {
           children: const [
             Icon(Icons.emoji_events, size: 72, color: Colors.grey),
             SizedBox(height: 16),
-            Text('No tournaments available yet.', style: TextStyle(color: Colors.white70)),
+            Text(
+              'No tournaments available yet.',
+              style: TextStyle(color: Colors.white70),
+            ),
             SizedBox(height: 8),
             Text('Pull to refresh.', style: TextStyle(color: Colors.white54)),
           ],
@@ -103,8 +123,9 @@ class EventListView extends StatelessWidget {
         itemCount: events.length,
         itemBuilder: (context, index) {
           final event = events[index];
-          final isRegistered =
-              _eventController.myRegisteredEvents.any((e) => e.id == event.id);
+          final isRegistered = _eventController.myRegisteredEvents.any(
+            (e) => e.id == event.id,
+          );
 
           return Card(
             color: const Color(0xFF1A1A2E),
@@ -117,13 +138,13 @@ class EventListView extends StatelessWidget {
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-            onTap: () {
-  final role = Get.find<AuthController>().currentUser.value?.role;
-  if (role == null) return;
-  Get.toNamed(
-    AppRouter.eventDetail.replaceAll(':id', event.id),
-  );
-},
+              onTap: () {
+                final role = Get.find<AuthController>().currentUser.value?.role;
+                if (role == null) return;
+                Get.toNamed(
+                  AppRouter.legacyEventDetail.replaceAll(':id', event.id),
+                );
+              },
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -138,16 +159,20 @@ class EventListView extends StatelessWidget {
                               if (isRegistered)
                                 const Padding(
                                   padding: EdgeInsets.only(right: 8),
-                                  child: Icon(Icons.check_circle,
-                                      color: Colors.green, size: 16),
+                                  child: Icon(
+                                    Icons.check_circle,
+                                    color: Colors.green,
+                                    size: 16,
+                                  ),
                                 ),
                               Expanded(
                                 child: Text(
                                   event.name,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: Colors.white),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -157,7 +182,9 @@ class EventListView extends StatelessWidget {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: event.status.color.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
@@ -166,9 +193,10 @@ class EventListView extends StatelessWidget {
                           child: Text(
                             event.status.displayName,
                             style: TextStyle(
-                                color: event.status.color,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold),
+                              color: event.status.color,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -176,35 +204,56 @@ class EventListView extends StatelessWidget {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Icon(Icons.location_on,
-                            size: 14, color: Colors.white54),
+                        const Icon(
+                          Icons.location_on,
+                          size: 14,
+                          color: Colors.white54,
+                        ),
                         const SizedBox(width: 6),
-                        Text(event.city ?? 'Unknown location',
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 13)),
+                        Text(
+                          event.city ?? 'Unknown location',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today,
-                            size: 14, color: Colors.white54),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 14,
+                          color: Colors.white54,
+                        ),
                         const SizedBox(width: 6),
-                        Text(_formatDate(event.startDate),
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 13)),
+                        Text(
+                          _formatDate(event.startDate),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                     if (event.level != null) ...[
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.sports_mma,
-                              size: 14, color: Colors.white54),
+                          const Icon(
+                            Icons.sports_mma,
+                            size: 14,
+                            color: Colors.white54,
+                          ),
                           const SizedBox(width: 6),
-                          Text(event.level!,
-                              style: const TextStyle(
-                                  color: Colors.white70, fontSize: 13)),
+                          Text(
+                            event.level!,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
                         ],
                       ),
                     ],

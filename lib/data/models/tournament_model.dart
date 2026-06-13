@@ -10,6 +10,7 @@ enum TournamentStatus {
   DRAFT,
   OPEN,
   CLOSED,
+  IN_PROGRESS,
   CANCELLED,
   COMPLETED;
 
@@ -33,6 +34,8 @@ enum TournamentStatus {
         return 'Open';
       case TournamentStatus.CLOSED:
         return 'Closed';
+      case TournamentStatus.IN_PROGRESS:
+        return 'In Progress';
       case TournamentStatus.CANCELLED:
         return 'Cancelled';
       case TournamentStatus.COMPLETED:
@@ -48,6 +51,8 @@ enum TournamentStatus {
         return Colors.green;
       case TournamentStatus.CLOSED:
         return Colors.orange;
+      case TournamentStatus.IN_PROGRESS:
+        return Colors.blue;
       case TournamentStatus.CANCELLED:
         return Colors.red;
       case TournamentStatus.COMPLETED:
@@ -62,6 +67,8 @@ enum TournamentStatus {
       case TournamentStatus.OPEN:
         return [TournamentStatus.CLOSED, TournamentStatus.CANCELLED];
       case TournamentStatus.CLOSED:
+        return [TournamentStatus.OPEN, TournamentStatus.CANCELLED];
+      case TournamentStatus.IN_PROGRESS:
         return [TournamentStatus.COMPLETED, TournamentStatus.CANCELLED];
       case TournamentStatus.CANCELLED:
       case TournamentStatus.COMPLETED:
@@ -333,10 +340,10 @@ class CreateTournamentDivisionRequest {
   });
 
   Map<String, dynamic> toJson() => {
-        if (categoryId != null) 'categoryId': categoryId,
+        if (categoryId != null) 'sportCategoryId': categoryId,
         if (gender != null) 'gender': gender,
-        if (weightMin != null) 'weightMin': weightMin,
-        if (weightMax != null) 'weightMax': weightMax,
+        if (weightMin != null) 'minWeight': weightMin,
+        if (weightMax != null) 'maxWeight': weightMax,
         if (ageMin != null) 'ageMin': ageMin,
         if (ageMax != null) 'ageMax': ageMax,
         if (maxParticipants != null) 'maxParticipants': maxParticipants,
@@ -370,10 +377,10 @@ class TournamentRegistration {
       TournamentRegistration(
         id: json['id']?.toString() ?? '',
         tournamentId: json['tournamentId']?.toString() ?? '',
-        fighterId: json['fighterId']?.toString() ?? '',
-        fighterName: json['fighterName'],
-        divisionId: json['divisionId']?.toString(),
-        divisionName: json['divisionName'],
+        fighterId: (json['fighterUserId'] ?? json['fighterId'])?.toString() ?? '',
+        fighterName: json['fighterName'] ?? json['fighterFullName'],
+        divisionId: (json['tournamentCategoryId'] ?? json['divisionId'])?.toString(),
+        divisionName: json['divisionName'] ?? json['categoryName'],
         status: json['status'],
         registeredAt: json['registeredAt'] != null
             ? DateTime.tryParse(json['registeredAt'])

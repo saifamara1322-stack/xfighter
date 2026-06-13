@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // added for Clipboard
 import 'package:get/get.dart';
-import '../../auth/controllers/auth_controller.dart';
-import '../../../data/models/user_model.dart';
+import 'package:xfighter/core/routes/app_router.dart';
+import 'package:xfighter/data/models/admin_model.dart';
+import 'package:xfighter/data/repositories/admin_repository.dart';
+import 'package:xfighter/data/models/organizer_model.dart';
+import 'package:xfighter/data/models/user_model.dart';
+import 'package:xfighter/data/repositories/organizer_repository.dart';
+import 'package:xfighter/modules/auth/controllers/auth_controller.dart';
 
 class SharedProfileView extends StatelessWidget {
   SharedProfileView({super.key});
@@ -88,7 +94,8 @@ class SharedProfileView extends StatelessWidget {
               _buildInfoCard('Personal Details', [
                 _buildInfoRow(Icons.email, 'Email', user.email),
                 _buildInfoRow(Icons.phone, 'Phone', user.phoneNumber ?? 'Not provided'),
-                _buildInfoRow(Icons.fingerprint, 'User ID', user.id),
+                // Replace the simple row with a copyable one for User ID
+                _buildCopyableInfoRow(Icons.fingerprint, 'User ID', user.id),
               ]),
 
               const SizedBox(height: 16),
@@ -96,9 +103,11 @@ class SharedProfileView extends StatelessWidget {
               _buildInfoCard('Account Settings', [
                 _buildActionRow(Icons.lock, 'Change Password', () => _showChangePasswordDialog(context)),
                 _buildActionRow(Icons.edit, 'Edit Profile', () => _showEditProfileDialog(context, user)),
-                if (user.role == UserRole.FIGHTER || user.role == UserRole.REFEREE)
+                if (user.role == UserRole.FIGHTER ||
+                    user.role == UserRole.REFEREE ||
+                    user.role == UserRole.COACH)
                   _buildActionRow(Icons.description, 'Manage Documents', () {
-                    Get.snackbar('Coming Soon', 'Document management is not yet implemented', colorText: Colors.white);
+                    Get.toNamed(AppRouter.documents);
                   }),
               ]),
             ],
@@ -108,7 +117,50 @@ class SharedProfileView extends StatelessWidget {
     );
   }
 
+  // New method to display a row with a copy button
+  Widget _buildCopyableInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFFE31837), size: 20),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                const SizedBox(height: 4),
+                Text(value, style: const TextStyle(color: Colors.white, fontSize: 16)),
+              ],
+            ),
+          ),
+          // Copy button
+          IconButton(
+            icon: const Icon(Icons.copy, color: Colors.white54, size: 18),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: value));
+              Get.snackbar(
+                'Copied!',
+                '$label copied to clipboard',
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+                duration: const Duration(seconds: 2),
+              );
+            },
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showChangePasswordDialog(BuildContext context) {
+    final user = _authController.currentUser.value;
+    if (user == null) return;
+
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
@@ -159,12 +211,35 @@ class SharedProfileView extends StatelessWidget {
               }
               
               isSubmitting.value = true;
-              // Simulate API call
-              await Future.delayed(const Duration(seconds: 1));
+              try {
+                if (user.role == UserRole.ADMIN ||
+                    user.role == UserRole.SUPER_ADMIN) {
+                  final repo = AdminRepository();
+                  await repo.changeMyPassword(ChangePasswordRequest(
+                    oldPassword: currentPasswordController.text,
+                    newPassword: newPasswordController.text,
+                  ));
+                } else if (user.role == UserRole.ORGANIZER) {
+                  final repo = OrganizerRepository();
+                  await repo.changeMyPassword(ChangePasswordRequest(
+                    oldPassword: currentPasswordController.text,
+                    newPassword: newPasswordController.text,
+                  ));
+                } else {
+                  throw Exception(
+                      'Password change is only available for admin and organizer accounts.');
+                }
+              } catch (e) {
+                isSubmitting.value = false;
+                Get.snackbar('Error', e.toString(),
+                    backgroundColor: Colors.red, colorText: Colors.white);
+                return;
+              }
               isSubmitting.value = false;
-              
+
               Get.back();
-              Get.snackbar('Success', 'Password changed successfully', backgroundColor: Colors.green, colorText: Colors.white);
+              Get.snackbar('Success', 'Password changed successfully',
+                  backgroundColor: Colors.green, colorText: Colors.white);
             },
             child: isSubmitting.value 
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
@@ -218,24 +293,46 @@ class SharedProfileView extends StatelessWidget {
               }
 
               isSubmitting.value = true;
-              // Simulate API call
-              await Future.delayed(const Duration(seconds: 1));
-              
-              // Optimistically update AuthController's current user (simulate refresh)
-              final updatedUser = User(
-                id: user.id,
-                email: user.email,
-                fullName: nameController.text.trim(),
-                phoneNumber: phoneController.text.trim(),
-                role: user.role,
-                status: user.status,
-                countryId: user.countryId,
-              );
-              _authController.currentUser.value = updatedUser;
-              
+              try {
+                User updated;
+                if (user.role == UserRole.ADMIN ||
+                    user.role == UserRole.SUPER_ADMIN) {
+                  updated = await AdminRepository().updateMyProfile(
+                    UpdateAdminRequest(
+                      fullName: nameController.text.trim(),
+                      phoneNumber: phoneController.text.trim(),
+                    ),
+                  );
+                } else if (user.role == UserRole.ORGANIZER) {
+                  updated = await OrganizerRepository().updateMyProfile(
+                    UpdateOrganizerRequest(
+                      fullName: nameController.text.trim(),
+                      phoneNumber: phoneController.text.trim(),
+                    ),
+                  );
+                } else {
+                  updated = User(
+                    id: user.id,
+                    email: user.email,
+                    fullName: nameController.text.trim(),
+                    phoneNumber: phoneController.text.trim(),
+                    role: user.role,
+                    status: user.status,
+                    countryId: user.countryId,
+                  );
+                }
+                _authController.currentUser.value = updated;
+              } catch (e) {
+                isSubmitting.value = false;
+                Get.snackbar('Error', e.toString(),
+                    backgroundColor: Colors.red, colorText: Colors.white);
+                return;
+              }
+
               isSubmitting.value = false;
               Get.back();
-              Get.snackbar('Success', 'Profile updated successfully', backgroundColor: Colors.green, colorText: Colors.white);
+              Get.snackbar('Success', 'Profile updated successfully',
+                  backgroundColor: Colors.green, colorText: Colors.white);
             },
             child: isSubmitting.value 
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
